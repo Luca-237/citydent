@@ -1,4 +1,3 @@
-/// Metadata local del usuario sync con clerk COOKIE GENERATOR
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
@@ -21,12 +20,9 @@ const userSchema = new mongoose.Schema({
     default: ''
   },
   role: { 
-    type: String, 
-    enum: ['user', 'admin'], 
+    type: String,     enum: ['user', 'admin', 'superAdmin'], 
     default: 'user' 
   }
-}, { 
-  timestamps: true // Crea automáticamente createdAt y updatedAt
+}, {   timestamps: true
 });
-
 module.exports = mongoose.model('User', userSchema);
