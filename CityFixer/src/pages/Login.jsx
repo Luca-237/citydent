@@ -1,6 +1,4 @@
 import { SignIn } from "@clerk/clerk-react";
-import { useUser, useAuth } from "@clerk/clerk-react";
-import { useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -8,45 +6,16 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import api from "../services/api";
-import "./styles.css";
 
 function Login() {
-  const { isSignedIn, getToken } = useAuth();
-  const { user, isLoaded } = useUser();
-
-  useEffect(() => {
-    if (!isLoaded || !isSignedIn) return;
-
-    const sincronizar = async () => {
-      try {
-        const token = await getToken();
-        const response = await api.post(
-          "/auth/login",
-          {
-            email: user.primaryEmailAddress?.emailAddress,
-            firstName: user.firstName,
-            lastName: user.lastName,
-          },
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-        console.log("Usuario sincronizado:", response.data);
-      } catch (error) {
-        console.error("Error sincronizando usuario:", error);
-      }
-    };
-
-    sincronizar();
-  }, [isLoaded, isSignedIn]);
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-azul-oscuro">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-sm">
         <CardHeader className="text-center pb-2">
           <div className="mx-auto mb-4 w-12 h-12 rounded-xl bg-muted flex items-center justify-center text-2xl">
             🏙️
           </div>
-            <CardTitle className="text-xl">CityFixer</CardTitle>
+          <CardTitle className="text-xl">CityFixer</CardTitle>
           <CardDescription>Ingresá a tu cuenta para continuar</CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
