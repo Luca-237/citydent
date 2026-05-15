@@ -5,8 +5,8 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
-import "./styles.css";
+} from "@/Components/ui/card";
+import api from "../services/api";
 
 function Login() {
   return (
