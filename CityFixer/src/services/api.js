@@ -1,10 +1,18 @@
 import axios from 'axios';
 
-// Este archivo es para que se mande la cookie siempre con cada peticion.
-
+// Cliente base — manda la cookie de sesión automáticamente en cada request
 const api = axios.create({
   baseURL: 'http://localhost:3000',
   withCredentials: true,
 });
+
+// ─── Categorías ───────────────────────────────────────────────────────────────
+
+// Trae todas las categorías disponibles para clasificar un incidente
+export const getCategorias = () => api.get('/api/categorias');
+
+// ─── Incidentes ───────────────────────────────────────────────────────────────
+
+// (próximamente — endpoints de carga y consulta de incidentes)
 
 export default api;

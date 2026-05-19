@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, MapPin, Send, X } from 'lucide-react';
+import { Camera, MapPin, Send, X, AlertCircle } from 'lucide-react';
+import { getCategorias } from '@/services/api';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,7 @@ import MapPicker from "./MapPicker";
 const IncidentForm = () => {
   const [categorias, setCategorias] = useState([]);
   const [cargandoCategorias, setCargandoCategorias] = useState(true);
+  const [errorCategorias, setErrorCategorias] = useState(false);
   const [ubicacionSeleccionada, setUbicacionSeleccionada] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -28,19 +30,10 @@ const IncidentForm = () => {
   const [imagenes, setImagenes] = useState([]);
 
   useEffect(() => {
-    const obtenerCategorias = async () => {
-      try {
-        const response = await fetch('http://localhost:8080/api/categorias');
-        if (!response.ok) throw new Error('Error al obtener categorías');
-        const data = await response.json();
-        setCategorias(data);
-      } catch (error) {
-        console.error("Error cargando categorías:", error);
-      } finally {
-        setCargandoCategorias(false);
-      }
-    };
-    obtenerCategorias();
+    getCategorias()
+      .then((res) => setCategorias(res.data))
+      .catch(() => setErrorCategorias(true))
+      .finally(() => setCargandoCategorias(false));
   }, []);
 
   const handleInputChange = (e) => {
@@ -120,18 +113,25 @@ const IncidentForm = () => {
 
           <div className="space-y-2">
             <Label className="text-slate-700 font-semibold ml-1">Categoría</Label>
-            <Select onValueChange={handleCategoryChange} disabled={cargandoCategorias}>
-              <SelectTrigger className="rounded-2xl border-none bg-[#D3D6FF]/50 h-12 focus:ring-2 focus:ring-[#3B418F]">
-                <SelectValue placeholder={cargandoCategorias ? "Cargando..." : "Selecciona una categoría"} />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-slate-200">
-                {categorias.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id.toString()}>
-                    {cat.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {errorCategorias ? (
+              <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-red-50 text-red-500 text-sm">
+                <AlertCircle size={15} className="shrink-0" />
+                No se pudieron cargar las categorías. Intentá de nuevo más tarde.
+              </div>
+            ) : (
+              <Select onValueChange={handleCategoryChange} disabled={cargandoCategorias}>
+                <SelectTrigger className="rounded-2xl border-none bg-[#D3D6FF]/50 h-12 focus:ring-2 focus:ring-[#3B418F]">
+                  <SelectValue placeholder={cargandoCategorias ? "Cargando..." : "Selecciona una categoría"} />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-slate-200">
+                  {categorias.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id.toString()}>
+                      {cat.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <div className="space-y-2">
