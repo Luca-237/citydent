@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Camera, MapPin, Send, X, AlertCircle } from 'lucide-react';
-import { getCategorias } from '@/services/api';
+import React, { useState, useEffect } from "react";
+import { Camera, MapPin, Send, X, AlertCircle } from "lucide-react";
+import { getCategorias } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,9 +22,9 @@ const IncidentForm = () => {
   const [ubicacionSeleccionada, setUbicacionSeleccionada] = useState(null);
 
   const [formData, setFormData] = useState({
-    titulo: '',
-    categoriaId: '',
-    descripcion: '',
+    titulo: "",
+    categoriaId: "",
+    descripcion: "",
     coordenadas: null,
   });
   const [imagenes, setImagenes] = useState([]);
@@ -69,7 +69,11 @@ const IncidentForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Datos a enviar:", { ...formData, ubicacion: ubicacionSeleccionada, imagenes });
+    console.log("Datos a enviar:", {
+      ...formData,
+      ubicacion: ubicacionSeleccionada,
+      imagenes,
+    });
   };
 
   const direccionDisplay = ubicacionSeleccionada
@@ -80,27 +84,12 @@ const IncidentForm = () => {
     <Card className="border-none shadow-none bg-transparent">
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4 pt-4">
-
           {/* Ubicación — mapa primero */}
-          <div className="space-y-2">
-            <Label className="text-slate-700 font-semibold ml-1">Ubicación</Label>
-            <p className="text-xs text-gray-400 ml-1 -mt-1">
-              Tu posición actual aparece en azul. Tocá el mapa para marcar el incidente en rojo.
-            </p>
-            <MapPicker
-              onChange={handleUbicacionChange}
-              className="w-full h-52 rounded-2xl z-0"
-            />
-            {direccionDisplay && (
-              <div className="flex items-center gap-1.5 px-3 py-2 bg-[#D3D6FF]/50 rounded-2xl">
-                <MapPin size={13} className="text-[#3B418F] shrink-0" />
-                <span className="text-sm text-[#2F347A] font-medium truncate">{direccionDisplay}</span>
-              </div>
-            )}
-          </div>
 
           <div className="space-y-2">
-            <Label className="text-slate-700 font-semibold ml-1">¿Qué está pasando?</Label>
+            <Label className="text-slate-700 font-semibold ml-1">
+              ¿Qué está pasando?
+            </Label>
             <Input
               name="titulo"
               placeholder="Ej: Bache profundo, Luminaria rota..."
@@ -112,21 +101,33 @@ const IncidentForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-slate-700 font-semibold ml-1">Categoría</Label>
+            <Label className="text-slate-700 font-semibold ml-1">
+              Categoría
+            </Label>
             {errorCategorias ? (
               <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-red-50 text-red-500 text-sm">
                 <AlertCircle size={15} className="shrink-0" />
-                No se pudieron cargar las categorías. Intentá de nuevo más tarde.
+                No se pudieron cargar las categorías. Intentá de nuevo más
+                tarde.
               </div>
             ) : (
-              <Select onValueChange={handleCategoryChange} disabled={cargandoCategorias}>
+              <Select
+                onValueChange={handleCategoryChange}
+                disabled={cargandoCategorias}
+              >
                 <SelectTrigger className="rounded-2xl border-none bg-[#D3D6FF]/50 h-12 focus:ring-2 focus:ring-[#3B418F]">
-                  <SelectValue placeholder={cargandoCategorias ? "Cargando..." : "Selecciona una categoría"} />
+                  <SelectValue
+                    placeholder={
+                      cargandoCategorias
+                        ? "Cargando..."
+                        : "Selecciona una categoría"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-slate-200">
                   {categorias.map((cat) => (
                     <SelectItem key={cat._id} value={cat._id}>
-                      {cat.name}
+                      {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -135,7 +136,9 @@ const IncidentForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-slate-700 font-semibold ml-1">Detalles</Label>
+            <Label className="text-slate-700 font-semibold ml-1">
+              Detalles
+            </Label>
             <Textarea
               name="descripcion"
               placeholder="Danos más información..."
@@ -144,17 +147,47 @@ const IncidentForm = () => {
               onChange={handleInputChange}
             />
           </div>
-
+          <div className="space-y-2">
+            <Label className="text-slate-700 font-semibold ml-1">
+              Ubicación
+            </Label>
+            <p className="text-xs text-gray-400 ml-1 -mt-1">
+              Tu posición actual aparece en azul. Tocá el mapa para marcar el
+              incidente en rojo.
+            </p>
+            <MapPicker
+              onChange={handleUbicacionChange}
+              className="w-full h-52 rounded-2xl z-0"
+            />
+            {direccionDisplay && (
+              <div className="flex items-center gap-1.5 px-3 py-2 bg-[#D3D6FF]/50 rounded-2xl">
+                <MapPin size={13} className="text-[#3B418F] shrink-0" />
+                <span className="text-sm text-[#2F347A] font-medium truncate">
+                  {direccionDisplay}
+                </span>
+              </div>
+            )}
+          </div>
           <div className="space-y-2">
             <Label className="text-slate-700 font-semibold ml-1">Fotos</Label>
             <div className="flex flex-wrap gap-3">
               <label className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl bg-[#D3D6FF]/30 border-2 border-dashed border-[#3B418F]/30 cursor-pointer">
                 <Camera className="text-[#3B418F]" size={20} />
-                <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageChange} />
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
               </label>
               {imagenes.map((img, index) => (
                 <div key={index} className="relative w-20 h-20">
-                  <img src={img.preview} alt="prev" className="w-full h-full object-cover rounded-2xl" />
+                  <img
+                    src={img.preview}
+                    alt="prev"
+                    className="w-full h-full object-cover rounded-2xl"
+                  />
                   <Button
                     type="button"
                     variant="destructive"
@@ -171,7 +204,10 @@ const IncidentForm = () => {
         </CardContent>
 
         <CardFooter className="pt-2">
-          <Button type="submit" className="w-full h-12 rounded-2xl bg-[#292D60] hover:bg-[#2F347A] font-bold text-white">
+          <Button
+            type="submit"
+            className="w-full h-12 rounded-2xl bg-[#292D60] hover:bg-[#2F347A] font-bold text-white"
+          >
             <Send className="h-4 w-4 mr-2" /> Enviar Reporte
           </Button>
         </CardFooter>
