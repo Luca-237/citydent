@@ -35,7 +35,7 @@ return (
 
         {/* Formulario */}
         <div className="p-2 bg-white">
-          <IncidentForm />
+          <IncidentForm onSuccess={() => onOpenChange?.(false)} />
         </div>
       </DialogContent>
     </Dialog>

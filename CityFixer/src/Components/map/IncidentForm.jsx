@@ -1,164 +1,92 @@
-import React, { useState, useEffect } from "react";
-import { Camera, MapPin, Send, X, AlertCircle } from "lucide-react";
-import { getCategorias } from "@/services/api";
+import { useState } from "react";
+import { Send, MapPin, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { postIncidente } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import MapPicker from "./MapPicker";
+import ImageUploader from "./ImageUploader";
+import CategorySelect from "./CategorySelect";
 
-const IncidentForm = () => {
-  const [categorias, setCategorias] = useState([]);
-  const [cargandoCategorias, setCargandoCategorias] = useState(true);
-  const [errorCategorias, setErrorCategorias] = useState(false);
-  const [ubicacionSeleccionada, setUbicacionSeleccionada] = useState(null);
-
-  const [formData, setFormData] = useState({
-    titulo: "",
-    categoriaId: "",
-    descripcion: "",
-    coordenadas: null,
-  });
+const IncidentForm = ({ onSuccess }) => {
+  const [ubicacion, setUbicacion] = useState(null);
   const [imagenes, setImagenes] = useState([]);
-
-  useEffect(() => {
-    getCategorias()
-      .then((res) => setCategorias(res.data.categories))
-      .catch(() => setErrorCategorias(true))
-      .finally(() => setCargandoCategorias(false));
-  }, []);
+  const [formData, setFormData] = useState({ title: "", category: "", description: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [errorSubmit, setErrorSubmit] = useState(null);
+  const [exitoso, setExitoso] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCategoryChange = (value) => {
-    setFormData((prev) => ({ ...prev, categoriaId: value }));
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorSubmit(null);
 
-  const handleUbicacionChange = (ubicacion) => {
-    setUbicacionSeleccionada(ubicacion);
-    setFormData((prev) => ({
-      ...prev,
-      coordenadas: { lat: ubicacion.lat, lng: ubicacion.lng },
-    }));
-  };
+    if (!ubicacion?.lat || !ubicacion?.lng) {
+      setErrorSubmit("Marcá la ubicación del incidente en el mapa.");
+      return;
+    }
+    if (imagenes.length < 1 || imagenes.length > 3) {
+      setErrorSubmit("Adjuntá entre 1 y 3 fotos del incidente.");
+      return;
+    }
 
-  const handleImageChange = (e) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files).map((file) => ({
-        file,
-        preview: URL.createObjectURL(file),
-      }));
-      setImagenes((prev) => [...prev, ...filesArray]);
+    const data = new FormData();
+    data.append("title", formData.title.trim());
+    data.append("description", formData.description.trim());
+    data.append("category", formData.category);
+    // location como JSON string — el middleware del back debe parsearlo
+    data.append("location", JSON.stringify({ lat: ubicacion.lat, lng: ubicacion.lng }));
+    imagenes.forEach((img) => data.append("photos", img.file));
+
+    try {
+      setSubmitting(true);
+      await postIncidente(data);
+      setExitoso(true);
+      setTimeout(() => onSuccess?.(), 1500);
+    } catch (error) {
+      const msg =
+        error.response?.data?.details?.join(", ") ||
+        error.response?.data?.error ||
+        "Ocurrió un error al enviar el reporte. Intentá de nuevo.";
+      setErrorSubmit(msg);
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const removeImage = (index) => {
-    setImagenes((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Datos a enviar:", {
-      ...formData,
-      ubicacion: ubicacionSeleccionada,
-      imagenes,
-    });
-  };
-
-  const direccionDisplay = ubicacionSeleccionada
-    ? `${ubicacionSeleccionada.calle} ${ubicacionSeleccionada.numero}, ${ubicacionSeleccionada.barrio}`
+  const direccionDisplay = ubicacion
+    ? `${ubicacion.calle} ${ubicacion.numero}, ${ubicacion.barrio}`.trim()
     : null;
+
+  if (exitoso) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-3 px-6">
+        <CheckCircle2 size={52} className="text-green-500" strokeWidth={1.5} />
+        <p className="text-lg font-bold text-[#292D60]">¡Reporte enviado!</p>
+        <p className="text-sm text-gray-400 text-center">
+          Tu incidente fue registrado correctamente. Gracias por contribuir.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <Card className="border-none shadow-none bg-transparent">
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4 pt-4">
-          {/* Ubicación — mapa primero */}
 
           <div className="space-y-2">
-            <Label className="text-slate-700 font-semibold ml-1">
-              ¿Qué está pasando?
-            </Label>
-            <Input
-              name="titulo"
-              placeholder="Ej: Bache profundo, Luminaria rota..."
-              className="rounded-2xl border-none bg-[#D3D6FF]/50 p-6 focus-visible:ring-2 focus-visible:ring-[#3B418F]"
-              value={formData.titulo}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-slate-700 font-semibold ml-1">
-              Categoría
-            </Label>
-            {errorCategorias ? (
-              <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-red-50 text-red-500 text-sm">
-                <AlertCircle size={15} className="shrink-0" />
-                No se pudieron cargar las categorías. Intentá de nuevo más
-                tarde.
-              </div>
-            ) : (
-              <Select
-                onValueChange={handleCategoryChange}
-                disabled={cargandoCategorias}
-              >
-                <SelectTrigger className="rounded-2xl border-none bg-[#D3D6FF]/50 h-12 focus:ring-2 focus:ring-[#3B418F]">
-                  <SelectValue
-                    placeholder={
-                      cargandoCategorias
-                        ? "Cargando..."
-                        : "Selecciona una categoría"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl border-slate-200">
-                  {categorias.map((cat) => (
-                    <SelectItem key={cat._id} value={cat._id}>
-                      {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-slate-700 font-semibold ml-1">
-              Detalles
-            </Label>
-            <Textarea
-              name="descripcion"
-              placeholder="Danos más información..."
-              className="rounded-2xl border-none bg-[#D3D6FF]/50 p-4 min-h-[100px] focus-visible:ring-2 focus-visible:ring-[#3B418F]"
-              value={formData.descripcion}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-slate-700 font-semibold ml-1">
-              Ubicación
-            </Label>
+            <Label className="text-slate-700 font-semibold ml-1">Ubicación</Label>
             <p className="text-xs text-gray-400 ml-1 -mt-1">
-              Tu posición actual aparece en azul. Tocá el mapa para marcar el
-              incidente en rojo.
+              Tu posición en azul. Tocá el mapa para marcar el incidente en rojo.
             </p>
-            <MapPicker
-              onChange={handleUbicacionChange}
-              className="w-full h-52 rounded-2xl z-0"
-            />
+            <MapPicker onChange={setUbicacion} className="w-full h-52 rounded-2xl z-0" />
             {direccionDisplay && (
               <div className="flex items-center gap-1.5 px-3 py-2 bg-[#D3D6FF]/50 rounded-2xl">
                 <MapPin size={13} className="text-[#3B418F] shrink-0" />
@@ -168,47 +96,67 @@ const IncidentForm = () => {
               </div>
             )}
           </div>
+
+          <div className="space-y-2">
+            <Label className="text-slate-700 font-semibold ml-1">¿Qué está pasando?</Label>
+            <Input
+              name="title"
+              placeholder="Ej: Bache profundo, Luminaria rota..."
+              className="rounded-2xl border-none bg-[#D3D6FF]/50 p-6 focus-visible:ring-2 focus-visible:ring-[#3B418F]"
+              value={formData.title}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-slate-700 font-semibold ml-1">Categoría</Label>
+            <CategorySelect
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-slate-700 font-semibold ml-1">Detalles</Label>
+            <Textarea
+              name="description"
+              placeholder="Danos más información..."
+              className="rounded-2xl border-none bg-[#D3D6FF]/50 p-4 min-h-[100px] focus-visible:ring-2 focus-visible:ring-[#3B418F]"
+              value={formData.description}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+
           <div className="space-y-2">
             <Label className="text-slate-700 font-semibold ml-1">Fotos</Label>
-            <div className="flex flex-wrap gap-3">
-              <label className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl bg-[#D3D6FF]/30 border-2 border-dashed border-[#3B418F]/30 cursor-pointer">
-                <Camera className="text-[#3B418F]" size={20} />
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageChange}
-                />
-              </label>
-              {imagenes.map((img, index) => (
-                <div key={index} className="relative w-20 h-20">
-                  <img
-                    src={img.preview}
-                    alt="prev"
-                    className="w-full h-full object-cover rounded-2xl"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full"
-                    onClick={() => removeImage(index)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+            <ImageUploader
+              imagenes={imagenes}
+              onChange={(nuevas) => setImagenes((prev) => [...prev, ...nuevas])}
+              onRemove={(index) => setImagenes((prev) => prev.filter((_, i) => i !== index))}
+            />
           </div>
+
+          {errorSubmit && (
+            <div className="flex items-start gap-2 px-4 py-3 rounded-2xl bg-red-50 text-red-500 text-sm">
+              <AlertCircle size={15} className="shrink-0 mt-0.5" />
+              {errorSubmit}
+            </div>
+          )}
         </CardContent>
 
         <CardFooter className="pt-2">
           <Button
             type="submit"
-            className="w-full h-12 rounded-2xl bg-[#292D60] hover:bg-[#2F347A] font-bold text-white"
+            disabled={submitting}
+            className="w-full h-12 rounded-2xl bg-[#292D60] hover:bg-[#2F347A] font-bold text-white disabled:opacity-60"
           >
-            <Send className="h-4 w-4 mr-2" /> Enviar Reporte
+            {submitting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4 mr-2" />
+            )}
+            {submitting ? "Enviando..." : "Enviar Reporte"}
           </Button>
         </CardFooter>
       </form>
