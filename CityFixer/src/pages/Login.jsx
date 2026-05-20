@@ -1,55 +1,97 @@
 import { SignIn } from "@clerk/clerk-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/Components/ui/card";
+import Particles, { ParticlesProvider } from "@tsparticles/react";
+import { loadSlim } from "@tsparticles/slim";
 
+const PARTICLE_OPTIONS = {
+  fullScreen: false,
+  background: { color: { value: "transparent" } },
+  fpsLimit: 60,
+  particles: {
+    number: { value: 60, density: { enable: true } },
+    color: { value: ["#D3D6FF", "#3B418F", "#ffffff"] },
+    opacity: { value: { min: 0.1, max: 0.4 } },
+    size: { value: { min: 1, max: 3 } },
+    move: {
+      enable: true,
+      speed: 0.5,
+      random: true,
+      outModes: { default: "bounce" },
+    },
+    links: {
+      enable: true,
+      distance: 130,
+      color: "#3B418F",
+      opacity: 0.2,
+      width: 1,
+    },
+  },
+  detectRetina: true,
+};
 
-function Login() {
+// Definido fuera del componente para que sea estable (requisito de ParticlesProvider v4)
+async function initEngine(engine) {
+  await loadSlim(engine);
+}
+
+function LoginContent() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-azul-oscuro">
-      <Card className="w-full max-w-md shadow-sm">
-        <CardHeader className="text-center pb-2">
-          <div className="mx-auto mb-4 w-12 h-12 rounded-xl bg-muted flex items-center justify-center text-2xl">
+    <div className="relative min-h-screen flex items-center justify-center p-5 bg-[#181b3a] overflow-hidden">
+      <Particles
+        id="tsparticles"
+        className="absolute inset-0 w-full h-full"
+        options={PARTICLE_OPTIONS}
+      />
+
+      <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
+        <div className="mb-7 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-4xl mx-auto mb-4">
             🏙️
           </div>
-            <CardTitle className="text-xl">CityFixer</CardTitle>
-          <CardDescription>Ingresá a tu cuenta para continuar</CardDescription>
-        </CardHeader>
-        <CardContent className="flex justify-center">
+          <h1 className="text-white text-3xl font-bold tracking-tight">CityFixer</h1>
+          <p className="text-[#D3D6FF]/70 text-sm mt-1.5">Ingresá a tu cuenta para continuar</p>
+        </div>
+
+        <div className="w-full rounded-3xl overflow-hidden shadow-2xl">
           <SignIn
             routing="path"
             path="/login"
             fallbackRedirectUrl="/"
-            // appearance={{
-            //   variables: {
-            //     colorPrimary: "#18181b", // botón principal — negro neutro
-            //     colorBackground: "#ffffff",
-            //     colorText: "#18181b",
-            //     colorTextSecondary: "#71717a",
-            //     colorInputBackground: "#ffffff",
-            //     colorInputText: "#18181b",
-            //     borderRadius: "8px",
-            //   },
-            //   elements: {
-            //     rootBox: "w-full",
-            //     card: "shadow-none border-0 p-0 w-full",
-            //     headerTitle: "hidden",
-            //     headerSubtitle: "hidden",
-            //     socialButtonsBlockButton:
-            //       "border border-zinc-200 hover:bg-zinc-50 text-zinc-900",
-            //     formButtonPrimary: "bg-zinc-900 hover:bg-zinc-700 text-white",
-            //     footerActionLink: "text-zinc-900 font-medium",
-            //     identityPreviewEditButton: "text-zinc-900",
-            //   },
-            // }}
+            appearance={{
+              variables: {
+                colorPrimary: "#292D60",
+                colorBackground: "#ffffff",
+                colorText: "#1a1a2e",
+                colorTextSecondary: "#6b7280",
+                colorInputBackground: "#f5f6ff",
+                colorInputText: "#1a1a2e",
+                borderRadius: "0px",
+                fontFamily: "Geist Variable, sans-serif",
+              },
+              elements: {
+                rootBox: "w-full",
+                card: "shadow-none border-0 w-full rounded-none",
+                header: { display: "none" },
+                socialButtonsBlockButton:
+                  "border border-gray-200 hover:bg-[#f5f6ff] transition-colors font-medium",
+                formButtonPrimary:
+                  "bg-[#292D60] hover:bg-[#3B418F] transition-colors shadow-md",
+                footerActionLink:
+                  "text-[#292D60] font-semibold hover:text-[#3B418F]",
+                footerPages: { display: "none" },
+              },
+            }}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function Login() {
+  return (
+    <ParticlesProvider init={initEngine}>
+      <LoginContent />
+    </ParticlesProvider>
   );
 }
 

@@ -1,12 +1,9 @@
-import { useClerk, useUser } from "@clerk/clerk-react";
-import { useNavigate } from "react-router-dom";
-import { User, Mail, Calendar, LogOut } from "lucide-react";
+import { useUser } from "@clerk/clerk-react";
+import { User, Mail, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function PerfilTab({ incidents }) {
-  const { signOut } = useClerk();
   const { user } = useUser();
-  const navigate = useNavigate();
 
   const joinedDate = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString("es-AR", {
@@ -20,10 +17,6 @@ export default function PerfilTab({ incidents }) {
     { label: "Resueltos",   value: incidents.filter((i) => i.estado === "Resuelto").length },
     { label: "En revisión", value: incidents.filter((i) => i.estado === "En revisión").length },
   ];
-
-  const handleSignOut = () => {
-    signOut(() => navigate("/login"));
-  };
 
   return (
     <div className="px-4 py-5 flex flex-col gap-4">
@@ -75,14 +68,6 @@ export default function PerfilTab({ incidents }) {
         ))}
       </div>
 
-      {/* Cerrar sesión */}
-      <button
-        onClick={handleSignOut}
-        className="w-full py-3.5 rounded-2xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 active:bg-gray-100 transition-colors flex items-center justify-center gap-2"
-      >
-        <LogOut size={16} />
-        Cerrar sesión
-      </button>
     </div>
   );
 }
