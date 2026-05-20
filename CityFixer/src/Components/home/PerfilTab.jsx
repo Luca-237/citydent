@@ -20,7 +20,6 @@ export default function PerfilTab({ incidents }) {
 
   return (
     <div className="px-4 py-5 flex flex-col gap-4">
-      {/* Profile card con banner */}
       <Card className="rounded-2xl border-none shadow-sm overflow-hidden">
         <div className="bg-[#292D60] h-20" />
         <CardContent className="px-5 pb-5">
@@ -56,7 +55,6 @@ export default function PerfilTab({ incidents }) {
         </CardContent>
       </Card>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {stats.map((stat) => (
           <Card key={stat.label} className="rounded-2xl border-none shadow-sm">

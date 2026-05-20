@@ -1,4 +1,4 @@
-import { ChevronRight, ClipboardList, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { ChevronRight, ClipboardList, Clock, CheckCircle2, XCircle, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import IncidentCard, { EmptyState } from "./IncidentCard";
 
@@ -14,7 +14,7 @@ function KpiCard({ label, value, icon: Icon, color }) {
   );
 }
 
-export default function InicioTab({ user, incidents, onVerTodos }) {
+export default function InicioTab({ user, incidents, onVerTodos, onNuevoReporte }) {
   const hour = new Date().getHours();
   const greeting =
     hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
@@ -33,6 +33,23 @@ export default function InicioTab({ user, incidents, onVerTodos }) {
       <div>
         <p className="text-sm text-gray-400">{greeting},</p>
         <h2 className="text-2xl font-bold text-[#292D60]">{user?.firstName ?? "Ciudadano"}</h2>
+      </div>
+
+      <div className="rounded-2xl bg-[#292D60] px-5 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">📍</span>
+          <div>
+            <p className="text-white font-semibold text-sm">¿Ves algo en tu ciudad?</p>
+            <p className="text-[#D3D6FF]/70 text-xs mt-0.5">Reportalo y ayudá a resolverlo</p>
+          </div>
+        </div>
+        <button
+          onClick={onNuevoReporte}
+          className="flex items-center justify-center gap-1.5 w-full md:w-auto md:shrink-0 px-4 py-2.5 rounded-xl bg-white text-[#292D60] text-sm font-bold hover:bg-[#D3D6FF] transition-colors"
+        >
+          <Plus size={15} />
+          Cargar Incidente
+        </button>
       </div>
 
       <section>

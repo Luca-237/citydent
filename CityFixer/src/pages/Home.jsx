@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useUser } from "@clerk/clerk-react";
-import { Plus } from "lucide-react";
 
 import AppHeader from "@/Components/home/AppHeader";
 import BottomNav from "@/Components/home/BottomNav";
@@ -31,20 +30,16 @@ export default function Home() {
 
       <main className="flex-1 overflow-y-auto pb-24 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {activeTab === "inicio" && (
-          <InicioTab user={user} incidents={incidents} onVerTodos={() => setActiveTab("reportes")} />
+          <InicioTab
+            user={user}
+            incidents={incidents}
+            onVerTodos={() => setActiveTab("reportes")}
+            onNuevoReporte={() => setReportOpen(true)}
+          />
         )}
         {activeTab === "reportes" && <ReportesTab incidents={incidents} />}
         {activeTab === "perfil"   && <PerfilTab incidents={incidents} />}
       </main>
-
-      {activeTab !== "perfil" && (
-        <button
-          onClick={() => setReportOpen(true)}
-          className="fixed bottom-20 right-5 w-14 h-14 rounded-full bg-[#292D60] hover:bg-[#3B418F] text-white shadow-xl flex items-center justify-center transition-all active:scale-95 z-40"
-        >
-          <Plus size={26} />
-        </button>
-      )}
 
       <IncidentModal open={reportOpen} onOpenChange={setReportOpen} />
 
