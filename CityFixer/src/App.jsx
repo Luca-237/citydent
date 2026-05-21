@@ -8,6 +8,7 @@ function App() {
   const { isSignedIn, getToken, isLoaded } = useAuth();
   const { user } = useUser();
   const [isSynced, setIsSynced] = useState(false);
+  const [dbRole, setDbRole] = useState(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -20,7 +21,7 @@ function App() {
     const sincronizar = async () => {
       try {
         const token = await getToken();
-        await api.post(
+        const { data } = await api.post(
           "/auth/login",
           {
             email: user.primaryEmailAddress?.emailAddress,
@@ -29,7 +30,7 @@ function App() {
           },
           { headers: { Authorization: `Bearer ${token}` } },
         );
-        console.log("Usuario sincronizado", user);
+        setDbRole(data.user?.role ?? "user");
       } catch (error) {
         console.error("Error sincronizando usuario:", error);
       } finally {
@@ -44,7 +45,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <AppRouter />
+      <AppRouter dbRole={dbRole} />
     </BrowserRouter>
   );
 }
