@@ -1,8 +1,8 @@
 const Status = require('../models/status');
 const mongoose = require('mongoose');
 
-const getAllStatuses = async () => {
-  return await Status.find().sort({ name: 1 });
+const getAllStatuses = async (filter = {}) => {
+  return await Status.find(filter).sort({ name: 1 });
 };
 
 const createStatus = async ({ name, description }) => {
@@ -17,21 +17,22 @@ const createStatus = async ({ name, description }) => {
   return await status.save();
 };
 
-const deleteStatus = async (statusId) => {
+const toggleStatus = async (statusId) => {
   if (!mongoose.Types.ObjectId.isValid(statusId)) {
     const error = new Error('El estado enviado no es válido.');
     error.status = 400;
     throw error;
   }
 
-  const deleted = await Status.findByIdAndDelete(statusId);
-  if (!deleted) {
+  const status = await Status.findById(statusId);
+  if (!status) {
     const error = new Error('Estado no encontrado.');
     error.status = 404;
     throw error;
   }
 
-  return deleted;
+  status.isActive = !status.isActive;
+  return await status.save();
 };
 
-module.exports = { getAllStatuses, createStatus, deleteStatus };
+module.exports = { getAllStatuses, createStatus, toggleStatus };
