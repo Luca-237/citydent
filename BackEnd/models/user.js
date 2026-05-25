@@ -1,28 +1,38 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  clerkId: { 
-    type: String, 
-    required: true, 
-    unique: true 
+  clerkId: {
+    type: String,
+    required: true,
+    unique: true
   },
-  email: { 
-    type: String, 
-    required: true, 
-    unique: true 
+  email: {
+    type: String,
+    required: true,
+    unique: true
   },
-  firstName: { 
+  firstName: {
     type: String,
     default: ''
   },
-  lastName: { 
+  lastName: {
     type: String,
     default: ''
   },
-  role: { 
-    type: String,     enum: ['user', 'admin', 'superAdmin'], 
-    default: 'user' 
+  dni: {
+    type: String,
+    required: true,
+    match: /^\d{8}$/
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin', 'superAdmin'],
+    default: 'user'
+  },
+  isBanned: {
+    type: Boolean,
+    default: false
   }
-}, {   timestamps: true
-});
+}, { timestamps: true });
+
 module.exports = mongoose.model('User', userSchema);
