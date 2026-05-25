@@ -1,8 +1,8 @@
 const Category = require('../models/category');
 const mongoose = require('mongoose');
 
-const getAllCategories = async () => {
-  return await Category.find().sort({ name: 1 });
+const getAllCategories = async (filter = {}) => {
+  return await Category.find(filter).sort({ name: 1 });
 };
 
 const createCategory = async ({ name, description }) => {
@@ -17,21 +17,22 @@ const createCategory = async ({ name, description }) => {
   return await category.save();
 };
 
-const deleteCategory = async (categoryId) => {
+const toggleCategory = async (categoryId) => {
   if (!mongoose.Types.ObjectId.isValid(categoryId)) {
     const error = new Error('La categoría enviada no es válida.');
     error.status = 400;
     throw error;
   }
 
-  const deleted = await Category.findByIdAndDelete(categoryId);
-  if (!deleted) {
+  const category = await Category.findById(categoryId);
+  if (!category) {
     const error = new Error('Categoría no encontrada.');
     error.status = 404;
     throw error;
   }
 
-  return deleted;
+  category.isActive = !category.isActive;
+  return await category.save();
 };
 
-module.exports = { getAllCategories, createCategory, deleteCategory };
+module.exports = { getAllCategories, createCategory, toggleCategory };

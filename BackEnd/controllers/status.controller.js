@@ -1,8 +1,9 @@
-const { getAllStatuses, createStatus, deleteStatus } = require('../services/status.service');
+const { getAllStatuses, createStatus, toggleStatus } = require('../services/status.service');
 
 const getAll = async (req, res) => {
   try {
-    const statuses = await getAllStatuses();
+    const filter = req.filter || {};
+    const statuses = await getAllStatuses(filter);
     res.status(200).json({ success: true, statuses });
   } catch (error) {
     res.status(500).json({ error: 'Error interno del servidor.' });
@@ -22,10 +23,10 @@ const create = async (req, res) => {
   }
 };
 
-const remove = async (req, res) => {
+const toggle = async (req, res) => {
   try {
     const { id } = req.params;
-    const status = await deleteStatus(id);
+    const status = await toggleStatus(id);
     res.status(200).json({ success: true, status });
   } catch (error) {
     if (error.status === 400) {
@@ -38,4 +39,4 @@ const remove = async (req, res) => {
   }
 };
 
-module.exports = { getAll, create, remove };
+module.exports = { getAll, create, toggle };

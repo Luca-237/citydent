@@ -1,8 +1,9 @@
-const { getAllCategories, createCategory, deleteCategory } = require('../services/category.service');
+const { getAllCategories, createCategory, toggleCategory } = require('../services/category.service');
 
 const getAll = async (req, res) => {
   try {
-    const categories = await getAllCategories();
+    const filter = req.filter || {};
+    const categories = await getAllCategories(filter);
     res.status(200).json({ success: true, categories });
   } catch (error) {
     res.status(500).json({ error: 'Error interno del servidor.' });
@@ -22,10 +23,10 @@ const create = async (req, res) => {
   }
 };
 
-const remove = async (req, res) => {
+const toggle = async (req, res) => {
   try {
     const { id } = req.params;
-    const category = await deleteCategory(id);
+    const category = await toggleCategory(id);
     res.status(200).json({ success: true, category });
   } catch (error) {
     if (error.status === 400) {
@@ -38,4 +39,4 @@ const remove = async (req, res) => {
   }
 };
 
-module.exports = { getAll, create, remove };
+module.exports = { getAll, create, toggle };
