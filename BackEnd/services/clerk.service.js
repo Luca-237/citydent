@@ -1,3 +1,7 @@
+const User = require('../models/user');
+
+const DNI_REGEX = /^\d{8}$/;
+
 const upsertUser = async ({ clerkId, email, firstName, lastName, dni }) => {
   const existingUser = await User.findOne({ email });
 
@@ -12,7 +16,7 @@ const upsertUser = async ({ clerkId, email, firstName, lastName, dni }) => {
   }
 
   const updateFields = { clerkId, email, firstName, lastName };
-  
+
   // Solo incluir DNI si viene y el usuario no existe aún
   if (!existingUser && dni) {
     updateFields.dni = dni;
@@ -27,3 +31,5 @@ const upsertUser = async ({ clerkId, email, firstName, lastName, dni }) => {
     { upsert: true, returnDocument: 'after' }
   );
 };
+
+module.exports = { upsertUser };
