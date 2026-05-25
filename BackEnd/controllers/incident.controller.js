@@ -7,7 +7,7 @@ const {
 } = require('../services/incident.service');
 
 const create = async (req, res) => {
-    console.log('Llegó a create');
+  console.log('Llegó a create');
   console.log('dbUser:', req.dbUser);
   try {
     const incident = await createIncident(req.body, req.dbUser._id);
@@ -15,6 +15,10 @@ const create = async (req, res) => {
   } catch (error) {
     if (error.status === 400) {
       return res.status(400).json({ error: error.message, details: error.details });
+    }
+    // Nueva validación para manejar el error 200 de los incidentes dudosos
+    if (error.status === 200) {
+      return res.status(200).json({ success: false, message: error.message });
     }
     res.status(500).json({ error: 'Error interno del servidor.' });
   }
