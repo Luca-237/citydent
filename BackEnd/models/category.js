@@ -1,4 +1,3 @@
-//Traer las categorias desde la base de datos
 const mongoose = require('mongoose');
 
 const categorySchema = new mongoose.Schema({
@@ -12,6 +11,11 @@ const categorySchema = new mongoose.Schema({
     type: String,
     trim: true,
     default: ''
+  },
+  isActive: {
+    type: Boolean,
+    default: true,
+    index: true
   }
 }, {
   timestamps: true
