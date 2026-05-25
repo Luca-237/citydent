@@ -46,6 +46,21 @@ const incidentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, //MongoId de usuario
     ref: 'User',
     required: true
+  },
+  // --- NUEVOS CAMPOS IA ---
+  priority: {
+    type: Number,
+    min: 1,
+    max: 5,
+    default: 1
+  },
+  ai_justification: {
+    type: String,
+    trim: true
+  },
+  ai_suggested_category: {
+    type: String,
+    trim: true
   }
 }, {
   timestamps: true

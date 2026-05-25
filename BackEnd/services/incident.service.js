@@ -51,8 +51,7 @@ const validateIncidentData = (data) => {
 // 2. CREACIÓN (Usuario)
 // ==========================================
 
-const createIncident = async (incidentData, userId, finalStatusId) => {
-  // Primero validar
+const createIncident = async (incidentData, userId, finalStatusId, aiData) => {
   const validation = validateIncidentData(incidentData);
   if (!validation.isValid) {
     const error = new Error('Error en los datos del formulario');
@@ -60,6 +59,7 @@ const createIncident = async (incidentData, userId, finalStatusId) => {
     error.details = validation.errors;
     throw error;
   }
+  
 
   // Creación directa utilizando el estado determinado por el middleware
   const newIncident = new Incident({
@@ -69,7 +69,11 @@ const createIncident = async (incidentData, userId, finalStatusId) => {
     category: incidentData.category,
     location: incidentData.location,
     photos: incidentData.photos,
-    user: userId
+    user: userId,
+    // Insertamos la data de la IA
+    priority: aiData?.prioridad || 1,
+    ai_justification: aiData?.justificacion || 'No justificado',
+    ai_suggested_category: aiData?.categoriaSugerida || 'No sugerida'
   });
 
   return await newIncident.save();
