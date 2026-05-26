@@ -13,9 +13,7 @@ const analizarIncidenteIA = async (title, description) => {
     // 2. CONFIGURACIÓN DEL MODELO
     // Elegimos 'gemini-1.5-flash' porque es el más rápido para tareas de texto.
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      // MUY IMPORTANTE: Esta configuración obliga a Gemini a devolver SOLO un JSON válido, 
-      // sin formato Markdown (```json) ni saludos. Previene errores en el JSON.parse()
+      model: "gemini-1.5-flash-latest", // <-- AGREGA "-latest" AQUÍ
       generationConfig: {
         responseMimeType: "application/json",
       }
