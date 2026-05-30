@@ -1,6 +1,5 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// 1. INICIALIZACIÓN DEL SDK
 // Instanciamos el cliente usando la clave de entorno.
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -10,17 +9,14 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
  */
 const analizarIncidenteIA = async (title, description) => {
   try {
-    // 2. CONFIGURACIÓN DEL MODELO
-    // Elegimos 'gemini-1.5-flash' porque es el más rápido para tareas de texto.
+    // CAMBIO APLICADO AQUÍ: Actualizado al modelo vigente gemini-2.5-flash
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash-latest", // <-- AGREGA "-latest" AQUÍ
+      model: "gemini-2.5-flash", 
       generationConfig: {
         responseMimeType: "application/json",
       }
     });
 
-    // 3. INGENIERÍA DEL PROMPT (Instrucciones precisas)
-    // Le explicamos su rol, las reglas de negocio y la estructura de salida.
     const prompt = `
       Eres un analista experto del sistema de reportes urbanos "CityFixer" de una municipalidad.
       Tu tarea es analizar el siguiente incidente reportado por un ciudadano:
@@ -49,28 +45,19 @@ const analizarIncidenteIA = async (title, description) => {
       }
     `;
 
-    // 4. LLAMADA A LA API
-    // Enviamos el prompt al modelo y esperamos la respuesta
     const result = await model.generateContent(prompt);
     
-    // Extraemos el texto de la respuesta. 
-    // Como activamos el responseMimeType, text() será directamente un string en formato JSON.
+    // Extraemos y parseamos el JSON directamente
     const responseText = result.response.text();
-    
-    // Convertimos el string a un objeto JavaScript
     const analisis = JSON.parse(responseText);
 
     return analisis;
 
   } catch (error) {
-    // 5. MANEJO DE ERRORES Y FALLBACK
-    // Si la API de Gemini falla (caída del servidor, timeout, límite de cuota),
-    // NO queremos que el usuario no pueda subir su incidente. 
-    // Devolvemos un objeto seguro por defecto para que el flujo continúe.
     console.error("Error al consultar a Gemini API:", error);
     return {
       categoriaSugerida: "Sin Clasificar",
-      estadoSugerido: "pendiente", // Asumimos que es válido para no bloquear al ciudadano
+      estadoSugerido: "pendiente", 
       prioridadSugerida: 1,
       justificacion: "Validación por IA no disponible temporalmente. Se requiere revisión manual."
     };
