@@ -40,6 +40,9 @@ export const updateIncidentStatus = (id, statusId) =>
 export const updateIncidentCategory = (id, categoryId) =>
   api.patch(`/api/incidents/${id}/category`, { categoryId });
 
+// Trae el historial de estados de un incidente (solo admin/superAdmin)
+export const getIncidentHistory = (id) => api.get(`/api/incidents/${id}/history`);
+
 // ─── Admin — Categorías ───────────────────────────────────────────────────────
 
 // Crea una nueva categoría (solo superAdmin)

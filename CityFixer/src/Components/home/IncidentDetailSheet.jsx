@@ -1,4 +1,5 @@
 import { MapPin, Tag, Calendar, FileText, X } from "lucide-react";
+import StatusHistory from "@/Components/admin/incidents/StatusHistory";
 import {
   Sheet,
   SheetContent,
@@ -16,6 +17,7 @@ export default function IncidentDetailSheet({
   open,
   onOpenChange,
   actions,
+  isAdmin,
 }) {
   if (!incident) return null;
 
@@ -68,7 +70,7 @@ export default function IncidentDetailSheet({
         </SheetHeader>
 
         {/* Body scrolleable */}
-        <div className="flex-1 overflow-y-auto px-5 pt-5 pb-4 [&::-webkit-scrollbar]:hidden">
+        <div className="flex-1 overflow-y-auto px-5 pt-5 pb-4 [&::-webkit-scrollbar]:hidden flex flex-col gap-5">
           <div className="grid grid-cols-1 md:grid-cols-[400px_auto_1fr] gap-0">
             {/* Mapa — solo desktop */}
             <div className="hidden md:flex flex-col gap-3 pr-6">
@@ -115,6 +117,13 @@ export default function IncidentDetailSheet({
               </section>
             </div>
           </div>
+
+          {/* Historial — fuera del grid para evitar clipping en mobile */}
+          {isAdmin && (
+            <div className="border-t border-gray-100 pt-4">
+              <StatusHistory incidentId={incident._id} />
+            </div>
+          )}
         </div>
 
         {/* Panel de acciones sticky — solo cuando hay actions (admin) */}

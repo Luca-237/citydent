@@ -15,7 +15,7 @@ export default function AdminDashboard({ dbRole }) {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      <AdminHeader />
+      <AdminHeader dbRole={dbRole} />
       <AdminTabBar activeTab={activeTab} onTabChange={setActiveTab} dbRole={dbRole} />
 
  <main className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden">

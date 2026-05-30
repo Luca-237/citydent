@@ -50,6 +50,7 @@ export default function AdminIncidentCard({ incident, onUpdated }) {
         incident={incident}
         open={open}
         onOpenChange={setOpen}
+        isAdmin
         actions={
           <IncidentAdminActions
             incident={incident}

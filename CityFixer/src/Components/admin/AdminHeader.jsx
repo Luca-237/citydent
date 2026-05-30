@@ -9,17 +9,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function AdminHeader() {
+export default function AdminHeader({ dbRole }) {
   const { user } = useUser();
   const { signOut } = useClerk();
   const navigate = useNavigate();
+
+  const roleLabel = dbRole === "superAdmin" ? "Super Admin" : "Admin";
 
   return (
     <header className="bg-azul-oscuro px-5 py-3 flex items-center justify-between shrink-0">
       <div className="flex items-center gap-2">
         <span className="text-white font-bold text-lg tracking-tight">CityFixer</span>
         <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-white/70 uppercase tracking-wider">
-          Admin
+          {roleLabel}
         </span>
       </div>
 
