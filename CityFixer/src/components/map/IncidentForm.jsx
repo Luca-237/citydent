@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Send, MapPin, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { postIncidente } from "@/services/api";
-import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
-import { Textarea } from "@/Components/ui/textarea";
-import { Card, CardContent, CardFooter } from "@/Components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import MapPicker from "./MapPicker";
 import ImageUploader from "./ImageUploader";
 import CategorySelect from "./CategorySelect";
@@ -17,6 +17,8 @@ const IncidentForm = ({ onSuccess }) => {
   const [submitting, setSubmitting] = useState(false);
   const [errorSubmit, setErrorSubmit] = useState(null);
   const [exitoso, setExitoso] = useState(false);
+  const [emergenciaReportada, setEmergenciaReportada] = useState(false);
+  const [mensajeEmergencia, setMensajeEmergencia] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -40,7 +42,6 @@ const IncidentForm = ({ onSuccess }) => {
     data.append("title", formData.title.trim());
     data.append("description", formData.description.trim());
     data.append("category", formData.category);
-    // location como JSON string — el middleware del back debe parsearlo
     const street  = [ubicacion.calle, ubicacion.numero].filter(Boolean).join(" ");
     const address = [street, ubicacion.ciudad, ubicacion.provincia].filter(Boolean).join(", ");
     data.append("location", JSON.stringify({ lat: ubicacion.lat, lng: ubicacion.lng, address }));
@@ -48,12 +49,19 @@ const IncidentForm = ({ onSuccess }) => {
 
     try {
       setSubmitting(true);
-      await postIncidente(data);
-      setExitoso(true);
-      setTimeout(() => onSuccess?.(), 1500);
+      const response = await postIncidente(data);
+
+      if (response.data?.isEmergency) {
+        setMensajeEmergencia(response.data.message);
+        setEmergenciaReportada(true);
+      } else {
+        setExitoso(true);
+        setTimeout(() => onSuccess?.(), 1500);
+      }
     } catch (error) {
       const msg =
         error.response?.data?.details?.join(", ") ||
+        error.response?.data?.message ||
         error.response?.data?.error ||
         "Ocurrió un error al enviar el reporte. Intentá de nuevo.";
       setErrorSubmit(msg);
@@ -65,6 +73,24 @@ const IncidentForm = ({ onSuccess }) => {
   const direccionDisplay = ubicacion
     ? `${ubicacion.calle} ${ubicacion.numero}, ${ubicacion.barrio}`.trim()
     : null;
+
+  if (emergenciaReportada) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 gap-4 px-6 text-center">
+        <AlertCircle size={60} className="text-red-600 animate-pulse" strokeWidth={1.5} />
+        <p className="text-xl font-black text-red-600 uppercase tracking-wide">¡Emergencia Detectada!</p>
+        <p className="text-sm font-medium text-gray-700 bg-red-50 p-4 rounded-xl border border-red-100">
+          {mensajeEmergencia}
+        </p>
+        <Button
+          onClick={() => onSuccess?.()}
+          className="mt-4 w-full h-12 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl"
+        >
+          Entendido, llamaré a emergencias
+        </Button>
+      </div>
+    );
+  }
 
   if (exitoso) {
     return (

@@ -1,5 +1,5 @@
 import { Camera, X } from "lucide-react";
-import { Button } from "@/Components/ui/button";
+import { Button } from "@/components/ui/button";
 
 const MAX_FOTOS = 3;
 

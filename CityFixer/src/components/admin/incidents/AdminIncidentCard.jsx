@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MapPin, User } from "lucide-react";
-import { Card, CardContent } from "@/Components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { STATUS_STYLES, STATUS_LABELS, capitalize } from "@/lib/incidents";
 import { formatDate } from "@/components/home/IncidentCard";
 import IncidentDetailSheet from "@/components/home/IncidentDetailSheet";
@@ -51,6 +51,7 @@ export default function AdminIncidentCard({ incident, onUpdated }) {
         open={open}
         onOpenChange={setOpen}
         isAdmin
+        onUpdated={onUpdated}
         actions={
           <IncidentAdminActions
             incident={incident}

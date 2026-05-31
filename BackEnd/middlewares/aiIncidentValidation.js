@@ -61,6 +61,7 @@ const aiIncidentValidation = async (req, res, next) => {
     
     // Empaquetar TODOS los datos para que el servicio los guarde
     req.aiData = {
+      isAI: true,
       prioridad: evaluacionIA.prioridadSugerida || 1,
       categoriaSugerida: evaluacionIA.categoriaSugerida,
       justificacion: evaluacionIA.justificacion,

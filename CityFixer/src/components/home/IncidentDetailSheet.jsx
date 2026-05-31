@@ -1,16 +1,17 @@
 import { MapPin, Tag, Calendar, FileText, X } from "lucide-react";
 import StatusHistory from "@/components/admin/incidents/StatusHistory";
+import AIInsights from "@/components/admin/incidents/AIInsights";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/Components/ui/sheet";
+} from "@/components/ui/sheet";
 import { STATUS_STYLES, STATUS_LABELS, capitalize } from "@/lib/incidents";
 import { formatDate } from "./IncidentCard";
 import PhotoGallery from "./PhotoGallery";
 import LocationPanel from "./LocationPanel";
-import SectionLabel from "@/Components/ui/SectionLabel";
+import SectionLabel from "@/components/ui/SectionLabel";
 
 export default function IncidentDetailSheet({
   incident,
@@ -18,6 +19,7 @@ export default function IncidentDetailSheet({
   onOpenChange,
   actions,
   isAdmin,
+  onUpdated,
 }) {
   if (!incident) return null;
 
@@ -118,11 +120,14 @@ export default function IncidentDetailSheet({
             </div>
           </div>
 
-          {/* Historial — fuera del grid para evitar clipping en mobile */}
+          {/* Info IA + Historial — solo admin */}
           {isAdmin && (
-            <div className="border-t border-gray-100 pt-4">
-              <StatusHistory incidentId={incident._id} />
-            </div>
+            <>
+              <AIInsights incident={incident} onUpdated={onUpdated} />
+              <div className="border-t border-gray-100 pt-4">
+                <StatusHistory incidentId={incident._id} />
+              </div>
+            </>
           )}
         </div>
 

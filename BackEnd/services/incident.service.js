@@ -208,6 +208,29 @@ const updateIncidentCategory = async (incidentId, newCategory) => {
   return updated;
 };
 
+const updateIncidentPriority = async (incidentId, priority) => {
+  const value = Number(priority);
+  if (!Number.isInteger(value) || value < 1 || value > 5) {
+    const error = new Error('La prioridad debe ser un número entero entre 1 y 5.');
+    error.status = 400;
+    throw error;
+  }
+
+  const updated = await Incident.findByIdAndUpdate(
+    incidentId,
+    { $set: { priority: value } },
+    { returnDocument: 'after' }
+  );
+
+  if (!updated) {
+    const error = new Error('Incidente no encontrado');
+    error.status = 404;
+    throw error;
+  }
+
+  return updated;
+};
+
 // ==========================================
 // EXPORTACIONES
 // ==========================================

@@ -1,4 +1,4 @@
-const { createIncident, getIncidentsByUser, getAllIncidents, updateIncidentStatus, updateIncidentCategory } = require('../services/incident.service');
+const { createIncident, getIncidentsByUser, getAllIncidents, getIncidentHistory, updateIncidentStatus, updateIncidentCategory, updateIncidentPriority } = require('../services/incident.service');
 
 const create = async (req, res) => {
   try {
@@ -94,4 +94,22 @@ const updateCategory = async (req, res) => {
   }
 };
 
-module.exports = { create, getMyIncidents, getAll, getHistory, updateStatus, updateCategory };
+const updatePriority = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { priority } = req.body;
+
+    const incident = await updateIncidentPriority(id, priority);
+    res.status(200).json({ success: true, incident });
+  } catch (error) {
+    if (error.status === 400) {
+      return res.status(400).json({ error: error.message });
+    }
+    if (error.status === 404) {
+      return res.status(404).json({ error: error.message });
+    }
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+};
+
+module.exports = { create, getMyIncidents, getAll, getHistory, updateStatus, updateCategory, updatePriority };

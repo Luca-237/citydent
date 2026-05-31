@@ -12,22 +12,22 @@ export default function AdminTabBar({ activeTab, onTabChange, dbRole }) {
   const visibleTabs = TABS.filter(tab => !tab.superAdminOnly || dbRole === "superAdmin");
 
   return (
-    <nav className="bg-white border-b border-gray-100 px-5 shrink-0">
-      <div className="max-w-6xl mx-auto flex gap-1">
+    <nav className="bg-white border-b border-gray-100 shrink-0">
+      <div className="max-w-6xl mx-auto flex">
         {visibleTabs.map(({ id, label, icon: Icon }) => {
           const active = activeTab === id;
           return (
             <button
               key={id}
               onClick={() => onTabChange(id)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${
+              className={`flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-2 px-2 md:px-4 py-3 text-xs md:text-sm font-semibold border-b-2 transition-colors ${
                 active
                   ? "border-azul-oscuro text-azul-oscuro"
                   : "border-transparent text-gray-400 hover:text-gray-600"
               }`}
             >
-              <Icon size={15} />
-              {label}
+              <Icon size={16} />
+              <span className="text-[10px] md:text-sm">{label}</span>
             </button>
           );
         })}

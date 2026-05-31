@@ -40,6 +40,9 @@ export const updateIncidentStatus = (id, statusId) =>
 export const updateIncidentCategory = (id, categoryId) =>
   api.patch(`/api/incidents/${id}/category`, { categoryId });
 
+export const updateIncidentPriority = (id, priority) =>
+  api.patch(`/api/incidents/${id}/priority`, { priority });
+
 // Trae el historial de estados de un incidente (solo admin/superAdmin)
 export const getIncidentHistory = (id) => api.get(`/api/incidents/${id}/history`);
 
@@ -55,5 +58,12 @@ export const toggleCategory = (id) => api.patch(`/api/categories/${id}/toggle`);
 
 // Trae todos los estados disponibles
 export const getStatuses = () => api.get("/api/statuses");
+
+// ─── Usuarios (solo superAdmin) ───────────────────────────────────────────────
+
+export const getUsers = () => api.get("/api/users");
+export const getRoles = () => api.get("/api/users/roles");
+export const updateUserRole = (id, roleId) => api.patch(`/api/users/${id}/role`, { role: roleId });
+export const updateUserBan = (id, isBanned) => api.patch(`/api/users/${id}/ban`, { isBanned });
 
 export default api;
