@@ -1,4 +1,5 @@
 import { MapPin, Tag, Calendar, FileText, X } from "lucide-react";
+import StatusHistory from "@/Components/admin/incidents/StatusHistory";
 import {
   Sheet,
   SheetContent,
@@ -16,6 +17,7 @@ export default function IncidentDetailSheet({
   open,
   onOpenChange,
   actions,
+  isAdmin,
 }) {
   if (!incident) return null;
 
@@ -32,7 +34,7 @@ export default function IncidentDetailSheet({
         className="rounded-t-3xl max-h-[92vh] p-0 flex flex-col [&::-webkit-scrollbar]:hidden"
       >
         {/* Header oscuro */}
-        <SheetHeader className="bg-[#292D60] px-5 pt-3 pb-5 text-left rounded-t-3xl shrink-0">
+        <SheetHeader className="bg-azul-oscuro px-5 pt-3 pb-5 text-left rounded-t-3xl shrink-0">
           <div className="flex justify-center pb-2 md:hidden">
             <div className="w-10 h-1 bg-white/30 rounded-full" />
           </div>
@@ -68,7 +70,7 @@ export default function IncidentDetailSheet({
         </SheetHeader>
 
         {/* Body scrolleable */}
-        <div className="flex-1 overflow-y-auto px-5 pt-5 pb-4 [&::-webkit-scrollbar]:hidden">
+        <div className="flex-1 overflow-y-auto px-5 pt-5 pb-4 [&::-webkit-scrollbar]:hidden flex flex-col gap-5">
           <div className="grid grid-cols-1 md:grid-cols-[400px_auto_1fr] gap-0">
             {/* Mapa — solo desktop */}
             <div className="hidden md:flex flex-col gap-3 pr-6">
@@ -115,6 +117,13 @@ export default function IncidentDetailSheet({
               </section>
             </div>
           </div>
+
+          {/* Historial — fuera del grid para evitar clipping en mobile */}
+          {isAdmin && (
+            <div className="border-t border-gray-100 pt-4">
+              <StatusHistory incidentId={incident._id} />
+            </div>
+          )}
         </div>
 
         {/* Panel de acciones sticky — solo cuando hay actions (admin) */}

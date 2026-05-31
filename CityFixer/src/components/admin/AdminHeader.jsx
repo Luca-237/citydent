@@ -9,17 +9,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function AdminHeader() {
+export default function AdminHeader({ dbRole }) {
   const { user } = useUser();
   const { signOut } = useClerk();
   const navigate = useNavigate();
 
+  const roleLabel = dbRole === "superAdmin" ? "Super Admin" : "Admin";
+
   return (
-    <header className="bg-[#292D60] px-5 py-3 flex items-center justify-between shrink-0">
-      <div className="flex items-center gap-2">
-        <span className="text-white font-bold text-lg tracking-tight">CityFixer</span>
+    <header className="bg-azul-oscuro px-6 py-4 flex items-center justify-between shrink-0">
+      <div className="flex items-center gap-3">
+        <img src="/logoCityFixer.svg" alt="CityFixer" className="h-14 w-auto" />
+        <span className="text-white text-xl font-bold tracking-tight">CityFixer</span>
         <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-white/70 uppercase tracking-wider">
-          Admin
+          {roleLabel}
         </span>
       </div>
 
@@ -29,11 +32,11 @@ export default function AdminHeader() {
             <img
               src={user.imageUrl}
               alt="avatar"
-              className="w-9 h-9 rounded-full border-2 border-[#D3D6FF]/60"
+              className="w-11 h-11 rounded-full border-2 border-blanquito/60"
             />
           ) : (
-            <div className="w-9 h-9 rounded-full bg-[#D3D6FF]/20 border-2 border-[#D3D6FF]/40 flex items-center justify-center">
-              <User size={16} className="text-[#D3D6FF]" />
+            <div className="w-11 h-11 rounded-full bg-blanquito/20 border-2 border-blanquito/40 flex items-center justify-center">
+              <User size={16} className="text-blanquito" />
             </div>
           )}
         </DropdownMenuTrigger>
