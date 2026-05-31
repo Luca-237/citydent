@@ -1,4 +1,4 @@
-import MapView from "@/Components/map/MapView";
+import MapView from "@/components/map/MapView";
 
 export default function LocationPanel({ location, mapClassName = "w-full h-44 rounded-2xl z-0" }) {
   return (

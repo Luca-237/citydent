@@ -1,5 +1,5 @@
 import { MapPin, Tag, Calendar, FileText, X } from "lucide-react";
-import StatusHistory from "@/Components/admin/incidents/StatusHistory";
+import StatusHistory from "@/components/admin/incidents/StatusHistory";
 import {
   Sheet,
   SheetContent,
