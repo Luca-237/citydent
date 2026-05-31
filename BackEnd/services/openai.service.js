@@ -27,7 +27,8 @@ const analizarIncidenteIA = async (title, description) => {
       REGLAS DE EVALUACIÓN:
       1. ESTADO SUGERIDO: 
          - Si el reporte es una emergencia vital, requiere policía, bomberos o ambulancia (ej. accidentes graves, incendios, robos en curso), el estado DEBE ser "rechazado" (para que la app no retenga la emergencia y el ciudadano llame al 911).
-         - Si el título y la descripción no tienen sentido, parecen una broma, o se contradicen totalmente, el estado DEBE ser "dudoso".
+         - Si el título y la descripción parecen una broma, o se contradicen totalmente, el estado DEBE ser "dudoso".
+         - Si el titulo o la descripción son inicomprensibles o no tienen sentido, el estado DEBE ser "rechazado".
          - Si es un reporte normal de infraestructura (baches, basura, luz), el estado DEBE ser "pendiente".
       
       2. PRIORIDAD: 
