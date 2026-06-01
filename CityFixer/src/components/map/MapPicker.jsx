@@ -1,29 +1,33 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
+import { reverseGeocode } from "@/lib/geocoding";
 
 const DEFAULT_CENTER = [-32.4097, -63.2435];
-const DEFAULT_ZOOM = 17;
+const DEFAULT_ZOOM   = 17;
 
-// Marker azul para ubicación del usuario
 const userIcon = new L.Icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-  iconSize: [25, 41],
+  iconUrl:    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+  shadowUrl:  "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+  iconSize:   [25, 41],
   iconAnchor: [12, 41],
 });
 
-// Marker rojo para el incidente
 const incidentIcon = new L.Icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-  iconSize: [25, 41],
+  iconUrl:    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+  shadowUrl:  "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+  iconSize:   [25, 41],
   iconAnchor: [12, 41],
 });
+
+// Mueve la vista del mapa cuando se detecta la ubicación GPS — sin forzar remount
+function FlyToLocation({ position }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(position, DEFAULT_ZOOM);
+  }, [position, map]);
+  return null;
+}
 
 function MarkerSelector({ onSelect }) {
   const [position, setPosition] = useState(null);
@@ -40,56 +44,38 @@ function MarkerSelector({ onSelect }) {
 }
 
 export default function MapPicker({ onChange, className = "w-full h-52 rounded-xl z-0" }) {
-  const [userLocation, setUserLocation] = useState(DEFAULT_CENTER);
+  const [userLocation, setUserLocation]   = useState(null);
   const [locationFound, setLocationFound] = useState(false);
+
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
+      async (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
         setUserLocation([lat, lng]);
         setLocationFound(true);
-        handleSelect(lat, lng); // 👈 esto es lo nuevo
+        try {
+          const ubicacion = await reverseGeocode(lat, lng);
+          onChange?.(ubicacion);
+        } catch {
+          console.warn("No se pudo obtener la dirección de la ubicación actual.");
+        }
       },
-      () => {
-        console.warn(
-          "No se pudo obtener ubicación, usando Villa María por defecto",
-        );
-      },
+      () => console.warn("No se pudo obtener ubicación, usando Villa María por defecto."),
     );
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function handleSelect(lat, lng) {
+  const handleSelect = async (lat, lng) => {
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-        { headers: { "Accept-Language": "es" } },
-      );
-      const data = await res.json();
-      const address = data.address;
-
-      const ubicacion = {
-        lat,
-        lng,
-        calle: address.road || "",
-        numero: address.house_number || "S/N",
-        barrio: address.suburb || address.neighbourhood || "",
-        ciudad: address.city || address.town || address.village || "",
-        provincia: address.state || "",
-        codigoPostal: address.postcode || "",
-        displayName: data.display_name || "",
-      };
-
+      const ubicacion = await reverseGeocode(lat, lng);
       onChange?.(ubicacion);
-    } catch (error) {
-      console.error("Error obteniendo dirección:", error);
+    } catch {
+      console.error("Error obteniendo dirección.");
     }
-  }
+  };
 
   return (
     <MapContainer
-      key={userLocation.toString()}
-      center={userLocation}
+      center={DEFAULT_CENTER}
       zoom={DEFAULT_ZOOM}
       className={className}
     >
@@ -97,6 +83,7 @@ export default function MapPicker({ onChange, className = "w-full h-52 rounded-x
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      {userLocation && <FlyToLocation position={userLocation} />}
       {locationFound && <Marker position={userLocation} icon={userIcon} />}
       <MarkerSelector onSelect={handleSelect} />
     </MapContainer>
