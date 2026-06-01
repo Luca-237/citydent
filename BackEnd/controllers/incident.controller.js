@@ -1,4 +1,5 @@
-const { createIncident, getIncidentsByUser, getAllIncidents, getIncidentHistory, updateIncidentStatus, updateIncidentCategory, updateIncidentPriority } = require('../services/incident.service');
+const { createIncident, getIncidentsByUser, getAllIncidents, getIncidentHistory, updateIncidentStatus, updateIncidentCategory, updateIncidentPriority, cancelIncident } = require('../services/incident.service');
+const Status = require('../models/status');
 
 const create = async (req, res) => {
   try {
@@ -112,4 +113,25 @@ const updatePriority = async (req, res) => {
   }
 };
 
-module.exports = { create, getMyIncidents, getAll, getHistory, updateStatus, updateCategory, updatePriority };
+const cancel = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log('dbUser:', req.dbUser);
+    const cancelledStatus = await Status.findOne({ name: 'cancelado' });
+    if (!cancelledStatus) {
+      return res.status(500).json({ error: 'Estado "cancelado" no configurado en el sistema.' });
+    }
+
+    const incident = await cancelIncident(id, req.dbUser._id, cancelledStatus._id);
+    res.status(200).json({ success: true, incident });
+  } catch (error) {
+    if (error.status === 403) return res.status(403).json({ error: error.message });
+    if (error.status === 404) return res.status(404).json({ error: error.message });
+    if (error.status === 409) return res.status(409).json({ error: error.message });
+    console.error('Error en cancel:', error); // 👈
+
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+};
+
+module.exports = { create, getMyIncidents, getAll, getHistory, updateStatus, updateCategory, updatePriority, cancel };
