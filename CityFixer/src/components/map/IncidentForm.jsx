@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Send, MapPin, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Send, MapPin, AlertCircle, Loader2 } from "lucide-react";
 import { postIncidente } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,8 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import MapPicker from "./MapPicker";
 import ImageUploader from "./ImageUploader";
 import CategorySelect from "./CategorySelect";
+import EmergencyScreen from "./EmergencyScreen";
+import SuccessScreen from "./SuccessScreen";
 
 const IncidentForm = ({ onSuccess }) => {
   const [ubicacion, setUbicacion] = useState(null);
@@ -74,35 +76,8 @@ const IncidentForm = ({ onSuccess }) => {
     ? `${ubicacion.calle} ${ubicacion.numero}, ${ubicacion.barrio}`.trim()
     : null;
 
-  if (emergenciaReportada) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 gap-4 px-6 text-center">
-        <AlertCircle size={60} className="text-red-600 animate-pulse" strokeWidth={1.5} />
-        <p className="text-xl font-black text-red-600 uppercase tracking-wide">¡Emergencia Detectada!</p>
-        <p className="text-sm font-medium text-gray-700 bg-red-50 p-4 rounded-xl border border-red-100">
-          {mensajeEmergencia}
-        </p>
-        <Button
-          onClick={() => onSuccess?.()}
-          className="mt-4 w-full h-12 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl"
-        >
-          Entendido, llamaré a emergencias
-        </Button>
-      </div>
-    );
-  }
-
-  if (exitoso) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 gap-3 px-6">
-        <CheckCircle2 size={52} className="text-green-500" strokeWidth={1.5} />
-        <p className="text-lg font-bold text-azul-oscuro">¡Reporte enviado!</p>
-        <p className="text-sm text-gray-400 text-center">
-          Tu incidente fue registrado correctamente. Gracias por contribuir.
-        </p>
-      </div>
-    );
-  }
+  if (emergenciaReportada) return <EmergencyScreen message={mensajeEmergencia} onDismiss={() => onSuccess?.()} />;
+  if (exitoso)             return <SuccessScreen />;
 
   return (
     <Card className="border-none shadow-none bg-transparent">
