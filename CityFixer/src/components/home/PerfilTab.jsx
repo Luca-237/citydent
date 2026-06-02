@@ -1,4 +1,5 @@
 import { useUser } from "@clerk/clerk-react";
+import { Mail, Phone, MessageCircle, Clock } from "lucide-react";
 import { STATUS_KEYS } from "@/lib/incidents";
 
 export default function PerfilTab({ incidents, loading }) {
@@ -90,6 +91,73 @@ export default function PerfilTab({ incidents, loading }) {
 
         </div>
       </div>
+
+    {/* ── Ayuda y soporte ── */}
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden mt-4">
+
+      <div className="px-5 py-3.5 border-b border-slate-100">
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          Ayuda y soporte
+        </p>
+      </div>
+
+      <div className="divide-y divide-slate-50">
+
+        <a href="mailto:soporte@cityfixer.com" className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors group">
+          <div className="flex items-center justify-center w-7 h-7 rounded-md bg-slate-100 shrink-0 group-hover:bg-primary/10 transition-colors">
+            <Mail size={13} className="text-slate-500 group-hover:text-primary transition-colors" />
+          </div>
+          <div>
+            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Email</p>
+            <p className="text-xs font-medium text-slate-700 group-hover:text-primary transition-colors">
+              soporte@cityfixer.com
+            </p>
+          </div>
+        </a>
+
+        <a href="tel:+5493515551234" className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors group">
+          <div className="flex items-center justify-center w-7 h-7 rounded-md bg-slate-100 shrink-0 group-hover:bg-primary/10 transition-colors">
+            <Phone size={13} className="text-slate-500 group-hover:text-primary transition-colors" />
+          </div>
+          <div>
+            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Teléfono</p>
+            <p className="text-xs font-medium text-slate-700 group-hover:text-primary transition-colors">
+              +54 9 351 555-1234
+            </p>
+          </div>
+        </a>
+
+        <a href="https://wa.me/5493515555678" target="_blank" rel="noreferrer" className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors group">
+          <div className="flex items-center justify-center w-7 h-7 rounded-md bg-slate-100 shrink-0 group-hover:bg-emerald-50 transition-colors">
+            <MessageCircle size={13} className="text-slate-500 group-hover:text-emerald-600 transition-colors" />
+          </div>
+          <div>
+            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">WhatsApp</p>
+            <p className="text-xs font-medium text-slate-700 group-hover:text-emerald-600 transition-colors">
+              +54 9 351 555-5678
+            </p>
+          </div>
+        </a>
+
+      </div>
+
+      <div className="mx-5 my-3 flex items-start gap-3 bg-slate-50 rounded-lg px-3 py-2.5">
+        <Clock size={13} className="text-slate-400 mt-0.5 shrink-0" />
+        <div>
+          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">
+            Horario de atención
+          </p>
+          <p className="text-xs text-slate-600 font-medium">Lunes a Viernes</p>
+          <p className="text-xs text-slate-500">08:00 a 18:00 hs</p>
+        </div>
+      </div>
+
+      <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+        <span className="text-[10px] text-slate-400">© 2026 CityFixer</span>
+        <span className="text-[10px] text-slate-400">Versión 1.0.0</span>
+      </div>
+
+    </div>
 
     </div>
   );

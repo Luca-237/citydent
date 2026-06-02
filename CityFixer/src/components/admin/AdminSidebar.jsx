@@ -1,6 +1,9 @@
 import { useClerk } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
-import { LayoutList, BarChart2, Tag, Users, LogOut, HelpCircle } from "lucide-react";
+import { LayoutList, BarChart2, Tag, Users, LogOut, HelpCircle, Mail, Phone, MessageCircle, Clock } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
 
 const NAV_ITEMS = [
   { id: "incidentes",   label: "Incidentes",   icon: LayoutList },
@@ -50,10 +53,101 @@ export default function AdminSidebar({ activeTab, onTabChange, dbRole, onClose }
 
       {/* Footer */}
       <div className="px-3 py-3 border-t border-sidebar-border space-y-0.5 shrink-0">
-        <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-150">
-          <HelpCircle size={17} className="shrink-0" />
-          Ayuda y soporte
-        </button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-150">
+              <HelpCircle size={17} className="shrink-0" />
+              Ayuda y soporte
+            </button>
+          </DialogTrigger>
+
+          <DialogContent className="max-w-xs p-0 overflow-hidden">
+
+            {/* Cabecera del modal */}
+            <DialogHeader className="px-5 pt-5 pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 shrink-0">
+                  <HelpCircle size={16} className="text-primary" />
+                </div>
+                <div>
+                  <DialogTitle className="text-sm font-semibold text-slate-900">
+                    Ayuda y soporte
+                  </DialogTitle>
+                  <p className="text-xs text-slate-400 mt-0.5">CityFixer — Panel Administrativo</p>
+                </div>
+              </div>
+            </DialogHeader>
+
+            {/* Canales de contacto */}
+            <div className="px-5 py-4 space-y-3">
+              <a
+                href="mailto:soporte@cityfixer.com"
+                className="flex items-center gap-3 group"
+              >
+                <div className="flex items-center justify-center w-7 h-7 rounded-md bg-slate-100 shrink-0 group-hover:bg-primary/10 transition-colors">
+                  <Mail size={13} className="text-slate-500 group-hover:text-primary transition-colors" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Email</p>
+                  <p className="text-xs font-medium text-slate-700 group-hover:text-primary transition-colors">
+                    soporte@cityfixer.com
+                  </p>
+                </div>
+              </a>
+
+              <a
+                href="tel:+5493515551234"
+                className="flex items-center gap-3 group"
+              >
+                <div className="flex items-center justify-center w-7 h-7 rounded-md bg-slate-100 shrink-0 group-hover:bg-primary/10 transition-colors">
+                  <Phone size={13} className="text-slate-500 group-hover:text-primary transition-colors" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Teléfono</p>
+                  <p className="text-xs font-medium text-slate-700 group-hover:text-primary transition-colors">
+                    +54 9 351 555-1234
+                  </p>
+                </div>
+              </a>
+
+              <a
+                href="https://wa.me/5493515555678"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 group"
+              >
+                <div className="flex items-center justify-center w-7 h-7 rounded-md bg-slate-100 shrink-0 group-hover:bg-emerald-50 transition-colors">
+                  <MessageCircle size={13} className="text-slate-500 group-hover:text-emerald-600 transition-colors" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">WhatsApp</p>
+                  <p className="text-xs font-medium text-slate-700 group-hover:text-emerald-600 transition-colors">
+                    +54 9 351 555-5678
+                  </p>
+                </div>
+              </a>
+            </div>
+
+            {/* Horario */}
+            <div className="mx-5 mb-4 flex items-start gap-3 bg-slate-50 rounded-lg px-3 py-2.5">
+              <Clock size={13} className="text-slate-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">
+                  Horario de atención
+                </p>
+                <p className="text-xs text-slate-600 font-medium">Lunes a Viernes</p>
+                <p className="text-xs text-slate-500">08:00 a 18:00 hs</p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+              <span className="text-[10px] text-slate-400">© 2026 CityFixer</span>
+              <span className="text-[10px] text-slate-400">Versión 1.0.0</span>
+            </div>
+
+          </DialogContent>
+        </Dialog>
         <button
           onClick={() => signOut(() => navigate("/login"))}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-red-400 transition-all duration-150"

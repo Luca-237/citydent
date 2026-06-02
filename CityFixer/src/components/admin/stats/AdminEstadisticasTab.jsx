@@ -15,7 +15,7 @@ const BRAND_COLORS = ["#5C3F99", "#7C5CBF", "#9B7DD4", "#6B4FA8", "#4C3080", "#A
 function KpiCard({ label, value, accent = "text-slate-900", loading }) {
   if (loading) {
     return (
-      <Card className="border-slate-100 shadow-none">
+      <Card className="border-slate-200/80 shadow-sm">
         <CardContent className="p-4 flex flex-col gap-2">
           <div className="h-3 w-20 bg-slate-100 rounded-full animate-pulse" />
           <div className="h-8 w-12 bg-slate-100 rounded-lg animate-pulse" />
@@ -24,7 +24,7 @@ function KpiCard({ label, value, accent = "text-slate-900", loading }) {
     );
   }
   return (
-    <Card className="border-slate-100 shadow-none">
+    <Card className="border-slate-200/80 shadow-sm">
       <CardContent className="p-4">
         <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{label}</p>
         <p className={`text-2xl font-bold mt-1 ${accent}`}>{value}</p>
@@ -120,7 +120,7 @@ export default function AdminEstadisticasTab({ incidents, loading }) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             {/* ── Gráfico 1: Tendencia últimos 8 días ── */}
-            <Card className="border-slate-100 shadow-none">
+            <Card className="border-slate-200/80 shadow-sm">
               <CardContent className="p-5">
                 <div className="mb-4">
                   <p className="text-sm font-semibold text-slate-900">Actividad reciente</p>
@@ -155,7 +155,7 @@ export default function AdminEstadisticasTab({ incidents, loading }) {
             </Card>
 
             {/* ── Gráfico 2: Distribución por categoría ── */}
-            <Card className="border-slate-100 shadow-none">
+            <Card className="border-slate-200/80 shadow-sm">
               <CardContent className="p-5">
                 <div className="mb-4">
                   <p className="text-sm font-semibold text-slate-900">Distribución por categoría</p>
@@ -200,7 +200,7 @@ export default function AdminEstadisticasTab({ incidents, loading }) {
 
           {/* ── Estado general (si hay rechazados) ── */}
           {!loading && rechazados > 0 && (
-            <Card className="border-slate-100 shadow-none mt-6">
+            <Card className="border-slate-200/80 shadow-sm mt-6">
               <CardContent className="p-5">
                 <p className="text-sm font-semibold text-slate-900 mb-1">Estado general</p>
                 <p className="text-xs text-slate-400 mb-4">Distribución completa de estados activos</p>

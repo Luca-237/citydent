@@ -35,7 +35,7 @@ export default function AdminHeatmapView({ incidents, loading }) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl border border-slate-100 shadow-xs p-4">
+      <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-4">
         <div className="h-[500px] bg-slate-50 rounded-xl animate-pulse flex items-center justify-center">
           <p className="text-xs text-slate-400">Cargando mapa de calor...</p>
         </div>
@@ -44,7 +44,7 @@ export default function AdminHeatmapView({ incidents, loading }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-xs p-4">
+    <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-4">
 
       {/* Encabezado */}
       <div className="mb-3">
@@ -76,7 +76,7 @@ export default function AdminHeatmapView({ incidents, loading }) {
         </MapContainer>
 
         {/* Leyenda de intensidad */}
-        <div className="absolute bottom-5 right-4 z-[1001] bg-white/90 backdrop-blur-md rounded-lg border border-slate-100 shadow-xs px-3 py-2.5 pointer-events-none select-none">
+        <div className="absolute bottom-5 right-4 z-[1001] bg-white/90 backdrop-blur-md rounded-lg border border-slate-200/80 shadow-sm px-3 py-2.5 pointer-events-none select-none">
           <p className="text-[10px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">
             Intensidad
           </p>

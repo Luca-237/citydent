@@ -19,7 +19,7 @@ export default function AdminDashboard({ dbRole }) {
   const notifications = useNotifications(incidents);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
+    <div className="flex h-screen overflow-hidden bg-slate-100">
 
       {/* ── Sidebar desktop (oculto en mobile) ── */}
       <div className="hidden lg:flex h-full w-64 shrink-0">
