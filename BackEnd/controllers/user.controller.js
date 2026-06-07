@@ -1,4 +1,4 @@
-const { getUsers, getUserById, getMyProfile, updateProfile, createUserByAdmin, updateUserProfileByAdmin, getRoles, changeUserRole, banUser } = require('../services/user.service');
+const { getUsers, getUserById, getMyProfile, sendVerification, updateProfile, createUserByAdmin, updateUserProfileByAdmin, getRoles, changeUserRole, banUser } = require('../services/user.service');
 
 const fetchUsers = async (req, res) => {
   try {
@@ -76,6 +76,17 @@ const updateBan = async (req, res) => {
   }
 };
 
+const sendVerificationCode = async (req, res) => {
+  try {
+    await sendVerification(req.dbUser._id);
+    res.status(200).json({ success: true, message: 'Código de verificación enviado al correo.' });
+  } catch (error) {
+    if (error.status === 400) return res.status(400).json({ error: error.message });
+    if (error.status === 404) return res.status(404).json({ error: error.message });
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+};
+
 const fetchMyProfile = async (req, res) => {
   try {
     const user = await getMyProfile(req.dbUser._id);
@@ -121,4 +132,4 @@ const patchUserProfile = async (req, res) => {
   }
 };
 
-module.exports = { fetchUsers, fetchUserById, fetchMyProfile, patchProfile, createUser, patchUserProfile, fetchRoles, updateRole, updateBan };
+module.exports = { fetchUsers, fetchUserById, fetchMyProfile, sendVerificationCode, patchProfile, createUser, patchUserProfile, fetchRoles, updateRole, updateBan };

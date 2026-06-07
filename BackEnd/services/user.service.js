@@ -1,6 +1,8 @@
+const crypto = require('crypto');
 const User = require('../models/user');
 const Role = require('../models/role');
 const Neighborhood = require('../models/neighborhood');
+const { sendVerificationEmail } = require('./mail.service');
 const mongoose = require('mongoose');
 
 const DNI_REGEX = /^\d{8}$/;
@@ -46,7 +48,35 @@ const getRoles = async () => {
 };
 
 // ==========================================
-// 2. PERFIL PROPIO
+// 2. VERIFICACIÓN POR MAIL
+// ==========================================
+
+const sendVerification = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    const error = new Error('Usuario no encontrado.');
+    error.status = 404;
+    throw error;
+  }
+
+  if (user.profileComplete) {
+    const error = new Error('El perfil ya está completo, no se requiere verificación.');
+    error.status = 400;
+    throw error;
+  }
+
+  const code = String(crypto.randomInt(100000, 999999));
+  const expires = new Date(Date.now() + 10 * 60 * 1000);
+
+  await User.findByIdAndUpdate(userId, {
+    $set: { verificationToken: code, verificationTokenExpires: expires }
+  });
+
+  await sendVerificationEmail(user.email, code);
+};
+
+// ==========================================
+// 3. PERFIL PROPIO
 // ==========================================
 
 const getMyProfile = async (userId) => {
@@ -56,7 +86,7 @@ const getMyProfile = async (userId) => {
 };
 
 const updateProfile = async (userId, data) => {
-  const { telefono, direccion, ciudad, barrioId, provincia, codigoPostal, dni } = data;
+  const { telefono, direccion, ciudad, barrioId, provincia, codigoPostal, dni, verificationToken } = data;
   const errors = [];
 
   const user = await User.findById(userId);
@@ -64,6 +94,24 @@ const updateProfile = async (userId, data) => {
     const error = new Error('Usuario no encontrado.');
     error.status = 404;
     throw error;
+  }
+
+  // Validar OTP solo en el onboarding (primera vez)
+  if (!user.profileComplete) {
+    if (!verificationToken) {
+      const error = new Error('Se requiere el código de verificación.');
+      error.status = 400;
+      throw error;
+    }
+    if (
+      user.verificationToken !== verificationToken ||
+      !user.verificationTokenExpires ||
+      user.verificationTokenExpires < new Date()
+    ) {
+      const error = new Error('El código de verificación es inválido o expiró.');
+      error.status = 400;
+      throw error;
+    }
   }
 
   // DNI: obligatorio si el usuario no lo tiene aún, inmutable si ya lo tiene
@@ -118,6 +166,11 @@ const updateProfile = async (userId, data) => {
 
   const finalDni = updateFields.dni || user.dni;
   updateFields.profileComplete = isProfileComplete({ ...user.toObject(), ...updateFields, dni: finalDni });
+
+  if (!user.profileComplete) {
+    updateFields.verificationToken = null;
+    updateFields.verificationTokenExpires = null;
+  }
 
   return await User.findByIdAndUpdate(
     userId,
@@ -393,6 +446,7 @@ module.exports = {
   getUsers,
   getUserById,
   getMyProfile,
+  sendVerification,
   updateProfile,
   createUserByAdmin,
   updateUserProfileByAdmin,
