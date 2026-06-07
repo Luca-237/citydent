@@ -61,6 +61,15 @@ const incidentGroupSchema = new mongoose.Schema({
   is_emergency: {
     type: Boolean,
     default: false
+  },
+  isArchived: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  finalizedAt: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true

@@ -273,23 +273,20 @@ const updateGroupStatus = async (groupId, newStatusId, userId) => {
     throw error;
   }
 
-  const hasDubious = await Incident.exists({
-    _id: { $in: group.incidents },
-    is_dubious: true,
-    is_cancelled: { $ne: true }
-  });
+  const [hasDubious, newStatus] = await Promise.all([
+    Incident.exists({ _id: { $in: group.incidents }, is_dubious: true, is_cancelled: { $ne: true } }),
+    Status.findById(newStatusId)
+  ]);
 
-  if (hasDubious) {
-    const newStatus = await Status.findById(newStatusId);
-    if (!newStatus || !['aceptado', 'rechazado'].includes(newStatus.name)) {
-      const error = new Error('Un grupo con incidente dudoso solo puede cambiar a "aceptado" o "rechazado".');
-      error.status = 400;
-      throw error;
-    }
+  if (hasDubious && !['aceptado', 'rechazado'].includes(newStatus?.name)) {
+    const error = new Error('Un grupo con incidente dudoso solo puede cambiar a "aceptado" o "rechazado".');
+    error.status = 400;
+    throw error;
   }
 
   group.status = newStatusId;
   group.statusHistory.push({ status: newStatusId, changedBy: userId, source: 'admin' });
+  if (FINAL_STATUSES.includes(newStatus?.name)) group.finalizedAt = new Date();
   await group.save();
 
   await Incident.updateMany(
@@ -526,6 +523,7 @@ const cancelIncident = async (incidentId, userId) => {
     if (remainingCount === 0) {
       group.status = cancelledStatus._id;
       group.statusHistory.push({ status: cancelledStatus._id, changedBy: userId, source: 'user' });
+      group.finalizedAt = new Date();
     } else if (group.representativeId.toString() === incidentId.toString()) {
       const remaining = await Incident.find({
         _id: { $in: group.incidents },
