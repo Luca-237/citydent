@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MoreHorizontal, Eye, RefreshCw } from "lucide-react";
+import { MoreHorizontal, Eye, AlertTriangle, Archive, Users } from "lucide-react";
 import { TableRow, TableCell } from "@/components/ui/table";
 import {
   DropdownMenu,
@@ -9,18 +9,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import IncidentDetailSheet from "@/components/home/IncidentDetailSheet";
 import IncidentAdminActions from "./IncidentAdminActions";
-import { STATUS_LABELS, getStatusStyle, capitalize } from "@/lib/incidents";
+import { STATUS_LABELS, capitalize } from "@/lib/incidents";
 import { formatDate } from "@/components/home/IncidentCard";
 
-const PRIORITY_LABELS = { 1: "Muy baja", 2: "Baja", 3: "Media", 4: "Alta", 5: "Crítica" };
+function getPriorityLabel(p) {
+  if (p <= 2) return "Muy baja";
+  if (p <= 4) return "Baja";
+  if (p <= 6) return "Media";
+  if (p <= 8) return "Alta";
+  return "Crítica";
+}
 
-const PRIORITY_STYLES = {
-  1: "bg-gray-100 text-gray-500 border border-gray-200",
-  2: "bg-blue-50 text-blue-600 border border-blue-200",
-  3: "bg-amber-50 text-amber-700 border border-amber-200",
-  4: "bg-orange-50 text-orange-600 border border-orange-200",
-  5: "bg-red-50 text-red-600 border border-red-200",
-};
+function getPriorityStyle(p) {
+  if (p <= 2) return "bg-green-50 text-green-700 border border-green-200";
+  if (p <= 4) return "bg-blue-50 text-blue-600 border border-blue-200";
+  if (p <= 6) return "bg-amber-50 text-amber-700 border border-amber-200";
+  if (p <= 8) return "bg-orange-50 text-orange-600 border border-orange-200";
+  return "bg-red-50 text-red-600 border border-red-200";
+}
 
 const STATUS_TABLE_STYLES = {
   pendiente:  "bg-amber-50 text-amber-700 border border-amber-200",
@@ -42,20 +48,37 @@ function StatusBadge({ statusName }) {
   );
 }
 
-export default function AdminIncidentRow({ incident, onUpdated }) {
+export default function AdminIncidentRow({ incident, onUpdated, isReadOnly = false }) {
   const [open, setOpen] = useState(false);
-
   const priority = incident.priority ?? 1;
 
   return (
     <>
-      <TableRow className="hover:bg-slate-50/80">
+      <TableRow className={`hover:bg-slate-50/80 ${isReadOnly ? "opacity-60" : ""}`}>
         {/* Detalle: título + dirección */}
         <TableCell className="py-2.5 pl-5 cursor-pointer" onClick={() => setOpen(true)}>
-          <p className="text-sm font-semibold text-slate-900 leading-tight">{incident.title}</p>
-          <p className="text-xs text-slate-500 truncate max-w-[260px] mt-0.5">
-            {incident.location?.address ?? "—"}
-          </p>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className="text-sm font-semibold text-slate-900 leading-tight">{incident.representativeId?.title}</p>
+            {incident.representativeId?.is_dubious && (
+              <AlertTriangle size={13} className="shrink-0 text-orange-400" title="Incidente dudoso" />
+            )}
+            {isReadOnly && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                <Archive size={9} /> Archivado
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <p className="text-xs text-slate-500 truncate max-w-[220px]">
+              {incident.representativeId?.location?.address ?? "—"}
+            </p>
+            {incident.incidents?.length > 1 && (
+              <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                <Users size={9} />
+                {incident.incidents.length}
+              </span>
+            )}
+          </div>
         </TableCell>
 
         {/* Categoría */}
@@ -67,8 +90,8 @@ export default function AdminIncidentRow({ incident, onUpdated }) {
 
         {/* Prioridad */}
         <TableCell className="py-2.5 cursor-pointer" onClick={() => setOpen(true)}>
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${PRIORITY_STYLES[priority]}`}>
-            {PRIORITY_LABELS[priority] ?? `P${priority}`}
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${getPriorityStyle(priority)}`}>
+            {priority} — {getPriorityLabel(priority)}
           </span>
         </TableCell>
 
@@ -79,32 +102,30 @@ export default function AdminIncidentRow({ incident, onUpdated }) {
 
         {/* Fecha */}
         <TableCell className="py-2.5 text-xs text-slate-500 whitespace-nowrap cursor-pointer" onClick={() => setOpen(true)}>
-          {formatDate(incident.createdAt)}
+          {formatDate(incident.representativeId?.createdAt)}
         </TableCell>
 
         {/* Acciones */}
         <TableCell className="py-2.5 pr-4 w-10">
-          <DropdownMenu>
-            <DropdownMenuTrigger className="p-1.5 rounded-md hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600 focus:outline-none">
-              <MoreHorizontal size={16} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem
-                onClick={() => setOpen(true)}
-                className="gap-2 cursor-pointer text-sm"
-              >
-                <Eye size={14} />
-                Ver Detalle
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setOpen(true)}
-                className="gap-2 cursor-pointer text-sm"
-              >
-                <RefreshCw size={14} />
-                Cambiar Estado
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {isReadOnly ? (
+            <button
+              onClick={() => setOpen(true)}
+              className="p-1.5 rounded-md hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+            >
+              <Eye size={16} />
+            </button>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="p-1.5 rounded-md hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600 focus:outline-none">
+                <MoreHorizontal size={16} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem onClick={() => setOpen(true)} className="gap-2 cursor-pointer text-sm">
+                  <Eye size={14} /> Ver Detalle
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </TableCell>
       </TableRow>
 
@@ -115,10 +136,12 @@ export default function AdminIncidentRow({ incident, onUpdated }) {
         isAdmin
         onUpdated={onUpdated}
         actions={
-          <IncidentAdminActions
-            incident={incident}
-            onUpdated={() => { onUpdated?.(); setOpen(false); }}
-          />
+          isReadOnly ? null : (
+            <IncidentAdminActions
+              incident={incident}
+              onUpdated={() => { onUpdated?.(); setOpen(false); }}
+            />
+          )
         }
       />
     </>

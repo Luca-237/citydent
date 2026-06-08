@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getUsers, getRoles, createUser, updateUserRole, updateUserBan } from "@/services/api";
+import { getUsers, getRoles, createUser, updateUserRole, updateUserBan, updateUserProfile } from "@/services/api";
 
 export function useUsers() {
   const [users, setUsers]             = useState([]);
@@ -38,11 +38,11 @@ export function useUsers() {
     }
   };
 
-  const handleCreate = async ({ firstName, lastName, email, password, roleId }) => {
+  const handleCreate = async ({ firstName, lastName, email, roleId }) => {
     setCreateLoading(true);
     setCreateError(null);
     try {
-      await createUser({ firstName, lastName, email, password, ...(roleId && { role: roleId }) });
+      await createUser({ firstName, lastName, email, ...(roleId && { roleId }) });
       const res = await getUsers();
       setUsers(res.data.users);
       return true;
@@ -66,9 +66,25 @@ export function useUsers() {
     }
   };
 
+  const handleProfileEdit = async (userId, body) => {
+    setActionLoading((prev) => ({ ...prev, [userId]: "profile" }));
+    try {
+      const res = await updateUserProfile(userId, body);
+      setUsers((prev) => prev.map((u) => u._id === userId ? res.data.user : u));
+      return { ok: true };
+    } catch (e) {
+      const detail = e.response?.data?.details;
+      const msg = detail ? detail.join(" · ") : (e.response?.data?.error ?? "No se pudo actualizar el perfil.");
+      return { ok: false, error: msg };
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [userId]: null }));
+    }
+  };
+
   return {
     users, roles, loading, loadError,
     actionLoading, actionError, handleRoleChange, handleBanToggle,
     handleCreate, createLoading, createError,
+    handleProfileEdit,
   };
 }

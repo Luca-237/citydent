@@ -7,7 +7,7 @@ import IncidentAdminActions from "./IncidentAdminActions";
 import IncidentSkeleton from "@/components/home/IncidentSkeleton";
 import { EmptyState } from "@/components/home/IncidentCard";
 
-export default function AdminIncidentList({ incidents, loading, onUpdated, focusedIncidentId, onClearFocus }) {
+export default function AdminIncidentList({ incidents, loading, onUpdated, focusedIncidentId, onClearFocus, isReadOnly = false }) {
   // Estado local para el incidente buscado — necesario para que el Sheet
   // permanezca abierto después de que onClearFocus() pone focusedIncidentId a null
   const [focusedIncident, setFocusedIncident] = useState(null);
@@ -67,7 +67,7 @@ export default function AdminIncidentList({ incidents, loading, onUpdated, focus
           </TableHeader>
           <TableBody>
             {incidents.map((inc) => (
-              <AdminIncidentRow key={inc._id} incident={inc} onUpdated={onUpdated} />
+              <AdminIncidentRow key={inc._id} incident={inc} onUpdated={onUpdated} isReadOnly={isReadOnly} />
             ))}
           </TableBody>
         </Table>
@@ -76,7 +76,7 @@ export default function AdminIncidentList({ incidents, loading, onUpdated, focus
       {/* ── MOBILE: Cards simplificadas ── */}
       <div className="md:hidden flex flex-col gap-2.5">
         {incidents.map((inc) => (
-          <AdminIncidentCard key={inc._id} incident={inc} onUpdated={onUpdated} />
+          <AdminIncidentCard key={inc._id} incident={inc} onUpdated={onUpdated} isReadOnly={isReadOnly} />
         ))}
       </div>
 
@@ -89,10 +89,12 @@ export default function AdminIncidentList({ incidents, loading, onUpdated, focus
           isAdmin
           onUpdated={onUpdated}
           actions={
-            <IncidentAdminActions
-              incident={focusedIncident}
-              onUpdated={() => { onUpdated?.(); handleFocusedOpenChange(false); }}
-            />
+            isReadOnly ? null : (
+              <IncidentAdminActions
+                incident={focusedIncident}
+                onUpdated={() => { onUpdated?.(); handleFocusedOpenChange(false); }}
+              />
+            )
           }
         />
       )}

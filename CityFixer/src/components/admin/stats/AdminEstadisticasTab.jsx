@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { STATUS_KEYS, capitalize } from "@/lib/incidents";
@@ -7,6 +7,8 @@ import {
   PieChart, Pie, Legend,
 } from "recharts";
 import AdminHeatmapView from "./AdminHeatmapView";
+import { requestPowerBiOtp } from "@/services/api";
+import { Zap, Loader2, CheckCircle2 } from "lucide-react";
 
 // ── Paleta de colores de marca para los gráficos ──
 const BRAND_COLORS = ["#5C3F99", "#7C5CBF", "#9B7DD4", "#6B4FA8", "#4C3080", "#A889CC", "#C4B8E0", "#8B6FC0"];
@@ -55,7 +57,47 @@ function PieTooltip({ active, payload }) {
   );
 }
 
-export default function AdminEstadisticasTab({ incidents, loading }) {
+const COOLDOWN_MS = 5 * 60 * 1000;
+
+export default function AdminEstadisticasTab({ incidents, loading, dbRole }) {
+  // ── Power BI OTP ──
+  const [otpLoading, setOtpLoading]         = useState(false);
+  const [otpSent, setOtpSent]               = useState(false);
+  const [otpError, setOtpError]             = useState(null);
+  const [cooldownUntil, setCooldownUntil]   = useState(null);
+  const [remaining, setRemaining]           = useState(0);
+
+  useEffect(() => {
+    if (!cooldownUntil) return;
+    const interval = setInterval(() => {
+      const secs = Math.ceil((cooldownUntil - Date.now()) / 1000);
+      if (secs <= 0) { setCooldownUntil(null); setRemaining(0); clearInterval(interval); }
+      else setRemaining(secs);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldownUntil]);
+
+  const handleRequestOtp = async () => {
+    setOtpLoading(true);
+    setOtpError(null);
+    setOtpSent(false);
+    try {
+      await requestPowerBiOtp();
+      setOtpSent(true);
+      setCooldownUntil(Date.now() + COOLDOWN_MS);
+      setRemaining(300);
+    } catch (err) {
+      setOtpError(err.response?.data?.error ?? "No se pudo generar el código.");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const isCoolingDown = cooldownUntil && Date.now() < cooldownUntil;
+  const cooldownLabel = isCoolingDown
+    ? `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`
+    : null;
+
   // ── Métricas KPI (lógica original intacta) ──
   const total      = incidents.length;
   const resueltos  = incidents.filter((i) => i.status?.name === STATUS_KEYS.RESOLVED).length;
@@ -230,6 +272,55 @@ export default function AdminEstadisticasTab({ incidents, loading }) {
         </TabsContent>
 
       </Tabs>
+
+      {/* ── Power BI — solo superAdmin ── */}
+      {dbRole === "superAdmin" && (
+        <Card className="border-slate-200/80 shadow-sm mt-2">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <p className="text-sm font-semibold text-slate-900 flex items-center gap-1.5">
+                  <Zap size={14} className="text-violet-500" />
+                  Acceso externo — Power BI
+                </p>
+                <p className="text-xs text-slate-400 mt-1 max-w-sm leading-relaxed">
+                  Generá un código OTP para conectar Power BI a los datos de CityFixer.
+                  Ingresalo en el header <code className="bg-slate-100 px-1 py-0.5 rounded text-[11px] font-mono text-slate-600">x-otp-code</code> de tu reporte. Expira en 5 minutos.
+                </p>
+              </div>
+
+              <button
+                onClick={handleRequestOtp}
+                disabled={otpLoading || isCoolingDown}
+                className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold disabled:opacity-50 transition-colors"
+              >
+                {otpLoading
+                  ? <><Loader2 size={14} className="animate-spin" /> Generando...</>
+                  : isCoolingDown
+                    ? `Reenviar en ${cooldownLabel}`
+                    : <><Zap size={14} /> Generar acceso</>
+                }
+              </button>
+            </div>
+
+            {otpSent && (
+              <div className="flex items-start gap-2 mt-4 px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
+                <CheckCircle2 size={14} className="shrink-0 text-emerald-600 mt-0.5" />
+                <p className="text-xs text-emerald-700 leading-snug">
+                  Código enviado a tu correo. Ingresalo en el header <code className="font-mono font-semibold">x-otp-code</code> de Power BI. Expira en 5 minutos.
+                </p>
+              </div>
+            )}
+
+            {otpError && (
+              <p className="mt-3 text-xs text-red-500 bg-red-50 border border-red-100 px-3 py-2 rounded-xl">
+                {otpError}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
     </div>
   );
 }

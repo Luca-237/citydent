@@ -60,11 +60,11 @@ function NotifItem({ incident, onSelect }) {
     >
       <div className="min-w-0">
         <p className="text-sm font-medium text-slate-800 truncate group-hover:text-primary transition-colors">
-          {incident.title}
+          {incident.representativeId?.title}
         </p>
-        {incident.location?.address && (
+        {incident.representativeId?.location?.address && (
           <p className="text-xs text-slate-400 truncate mt-0.5">
-            {incident.location.address}
+            {incident.representativeId.location.address}
           </p>
         )}
       </div>
@@ -132,10 +132,11 @@ export default function AdminTopbar({
   const results = trimmed.length > 0
     ? incidents
         .filter((inc) => {
-          const q = trimmed.toLowerCase();
+          const q   = trimmed.toLowerCase();
+          const rep = inc.representativeId;
           return (
-            inc.title?.toLowerCase().includes(q) ||
-            inc.location?.address?.toLowerCase().includes(q)
+            rep?.title?.toLowerCase().includes(q) ||
+            rep?.location?.address?.toLowerCase().includes(q)
           );
         })
         .slice(0, 6)
@@ -217,9 +218,9 @@ export default function AdminTopbar({
                         className="px-4 py-2.5 hover:bg-slate-50 cursor-pointer flex items-center justify-between gap-3 border-b border-gray-50 last:border-0 transition-colors"
                       >
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-slate-900 truncate">{inc.title}</p>
-                          {inc.location?.address && (
-                            <p className="text-xs text-slate-400 truncate mt-0.5">{inc.location.address}</p>
+                          <p className="text-sm font-medium text-slate-900 truncate">{inc.representativeId?.title}</p>
+                          {inc.representativeId?.location?.address && (
+                            <p className="text-xs text-slate-400 truncate mt-0.5">{inc.representativeId.location.address}</p>
                           )}
                         </div>
                         <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badgeCls}`}>

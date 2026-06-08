@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
-import { Search, Loader2, MoreHorizontal, Shield, ShieldOff, X, User, Plus } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Search, Loader2, MoreHorizontal, Shield, ShieldOff, X, User, Plus, Edit3, Check } from "lucide-react";
 import { useUsers } from "@/hooks/useUsers";
+import { getNeighborhoods } from "@/services/api";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -49,24 +50,29 @@ function UserAvatar({ user, size = "md" }) {
   );
 }
 
-const EMPTY_FORM = { firstName: "", lastName: "", email: "", password: "", roleId: "" };
+const EMPTY_FORM = { firstName: "", lastName: "", email: "", roleId: "" };
 
 function validateCreate(form) {
   const errs = {};
-  if (!form.firstName.trim()) errs.firstName = "El nombre es obligatorio.";
-  if (!form.lastName.trim())  errs.lastName  = "El apellido es obligatorio.";
-  if (!form.email.trim())     errs.email     = "El correo es obligatorio.";
-  if (!form.password.trim())  errs.password  = "La contraseña es obligatoria.";
-  else if (form.password.length < 6) errs.password = "Mínimo 6 caracteres.";
+  if (!form.email.trim()) errs.email = "El correo es obligatorio.";
   return errs;
 }
+
+const PROFILE_EMPTY = { firstName: "", lastName: "", dni: "", telefono: "", direccion: "", ciudad: "", barrioId: "", provincia: "", codigoPostal: "" };
+const INPUT_CLS = "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
 
 export default function AdminUsuariosTab() {
   const {
     users, roles, loading, loadError,
     actionLoading, actionError, handleRoleChange, handleBanToggle,
-    handleCreate, createLoading, createError,
+    handleCreate, createLoading, createError, handleProfileEdit,
   } = useUsers();
+
+  // ── Barrios ──
+  const [neighborhoods, setNeighborhoods] = useState([]);
+  useEffect(() => {
+    getNeighborhoods().then(({ data }) => setNeighborhoods(data.neighborhoods ?? [])).catch(() => {});
+  }, []);
 
   // ── Filtros ──
   const [searchTerm, setSearchTerm]       = useState("");
@@ -74,6 +80,19 @@ export default function AdminUsuariosTab() {
 
   // ── Sheet de edición ──
   const [selectedUserId, setSelectedUserId] = useState(null);
+
+  // ── Edición de perfil dentro del sheet ──
+  const [profileEditing, setProfileEditing]     = useState(false);
+  const [profileForm, setProfileForm]           = useState(PROFILE_EMPTY);
+  const [profileSaveError, setProfileSaveError] = useState(null);
+  const [profileSuccess, setProfileSuccess]     = useState(false);
+
+  // Resetear estado de edición de perfil al cambiar de usuario
+  useEffect(() => {
+    setProfileEditing(false);
+    setProfileSaveError(null);
+    setProfileSuccess(false);
+  }, [selectedUserId]);
   const selectedUser = useMemo(
     () => users.find((u) => u._id === selectedUserId) ?? null,
     [selectedUserId, users],
@@ -115,6 +134,55 @@ export default function AdminUsuariosTab() {
 
   const openCreate = () => { setForm(EMPTY_FORM); setFormErrors({}); setCreateOpen(true); };
   const closeCreate = () => { setCreateOpen(false); setFormErrors({}); };
+
+  // ── Handlers perfil ──
+  const openProfileEdit = (user) => {
+    setProfileForm({
+      firstName:    user.firstName   ?? "",
+      lastName:     user.lastName    ?? "",
+      dni:          user.dni         ?? "",
+      telefono:     user.telefono    ?? "",
+      direccion:    user.direccion   ?? "",
+      ciudad:       user.ciudad      ?? "",
+      barrioId:     user.barrio?._id ?? "",
+      provincia:    user.provincia   ?? "",
+      codigoPostal: user.codigoPostal ?? "",
+    });
+    setProfileSaveError(null);
+    setProfileEditing(true);
+  };
+
+  const closeProfileEdit = () => {
+    setProfileEditing(false);
+    setProfileSaveError(null);
+  };
+
+  const setProfileField = (key) => (e) => {
+    setProfileForm((prev) => ({ ...prev, [key]: e.target.value }));
+  };
+
+  const submitProfileEdit = async () => {
+    if (!selectedUser) return;
+    const body = {};
+    if (profileForm.firstName.trim())   body.firstName   = profileForm.firstName.trim();
+    if (profileForm.lastName.trim())    body.lastName    = profileForm.lastName.trim();
+    if (profileForm.dni.trim())         body.dni         = profileForm.dni.replace(/\D/g, "");
+    if (profileForm.telefono.trim())    body.telefono    = profileForm.telefono.replace(/\D/g, "");
+    if (profileForm.direccion.trim())   body.direccion   = profileForm.direccion.trim();
+    if (profileForm.ciudad.trim())      body.ciudad      = profileForm.ciudad.trim();
+    if (profileForm.barrioId)           body.barrioId    = profileForm.barrioId;
+    if (profileForm.provincia.trim())   body.provincia   = profileForm.provincia.trim();
+    if (profileForm.codigoPostal.trim()) body.codigoPostal = profileForm.codigoPostal.trim().toUpperCase();
+
+    const { ok, error } = await handleProfileEdit(selectedUser._id, body);
+    if (ok) {
+      setProfileEditing(false);
+      setProfileSuccess(true);
+      setTimeout(() => setProfileSuccess(false), 3000);
+    } else {
+      setProfileSaveError(error);
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -445,6 +513,120 @@ export default function AdminUsuariosTab() {
                 </div>
               )}
 
+              {/* Datos del perfil */}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-slate-700">Datos del perfil</p>
+                  <div className="flex items-center gap-2">
+                    {profileSuccess && (
+                      <span className="flex items-center gap-1 text-xs font-medium text-emerald-600">
+                        <Check size={12} /> Guardado
+                      </span>
+                    )}
+                    {!profileEditing ? (
+                      <button
+                        onClick={() => openProfileEdit(selectedUser)}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-celestito transition-colors"
+                      >
+                        <Edit3 size={12} /> Editar
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={closeProfileEdit}
+                          disabled={actionLoading[selectedUser._id] === "profile"}
+                          className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={submitProfileEdit}
+                          disabled={actionLoading[selectedUser._id] === "profile"}
+                          className="flex items-center gap-1 text-xs font-semibold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-celestito transition-colors disabled:opacity-60"
+                        >
+                          {actionLoading[selectedUser._id] === "profile"
+                            ? <Loader2 size={11} className="animate-spin" />
+                            : <Check size={11} />
+                          }
+                          {actionLoading[selectedUser._id] === "profile" ? "Guardando..." : "Guardar"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {!profileEditing ? (
+                  /* Vista */
+                  <div className="bg-slate-50 rounded-xl border border-slate-100 divide-y divide-slate-100">
+                    {[
+                      { label: "Nombre",        value: `${selectedUser.firstName ?? ""} ${selectedUser.lastName ?? ""}`.trim() },
+                      { label: "DNI",           value: selectedUser.dni },
+                      { label: "Teléfono",      value: selectedUser.telefono },
+                      { label: "Dirección",     value: selectedUser.direccion },
+                      { label: "Ciudad",        value: selectedUser.ciudad },
+                      { label: "Barrio",        value: selectedUser.barrio?.name },
+                      { label: "Provincia",     value: selectedUser.provincia },
+                      { label: "Cód. Postal",   value: selectedUser.codigoPostal },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="flex items-center justify-between px-3 py-2">
+                        <span className="text-xs text-slate-400 shrink-0">{label}</span>
+                        <span className="text-xs font-medium text-slate-700 truncate ml-3 text-right">
+                          {value || <span className="text-slate-300 italic">—</span>}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  /* Edición */
+                  <div className="flex flex-col gap-3">
+                    {profileSaveError && (
+                      <p className="text-xs text-red-500 bg-red-50 border border-red-100 px-3 py-2 rounded-xl">
+                        {profileSaveError}
+                      </p>
+                    )}
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { key: "firstName", label: "Nombre",   ph: "Lucía" },
+                        { key: "lastName",  label: "Apellido", ph: "García" },
+                      ].map(({ key, label, ph }) => (
+                        <div key={key} className="flex flex-col gap-1">
+                          <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{label}</label>
+                          <input value={profileForm[key]} onChange={setProfileField(key)} placeholder={ph} className={INPUT_CLS} />
+                        </div>
+                      ))}
+                    </div>
+                    {[
+                      { key: "dni",          label: "DNI",           ph: "12345678",       mode: "numeric" },
+                      { key: "telefono",     label: "Teléfono",      ph: "3514001234",     mode: "numeric" },
+                      { key: "direccion",    label: "Dirección",     ph: "Av. Siempreviva 742" },
+                      { key: "ciudad",       label: "Ciudad",        ph: "Villa María" },
+                      { key: "provincia",    label: "Provincia",     ph: "Córdoba" },
+                      { key: "codigoPostal", label: "Código postal", ph: "5900" },
+                    ].map(({ key, label, ph, mode }) => (
+                      <div key={key} className="flex flex-col gap-1">
+                        <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{label}</label>
+                        <input
+                          value={profileForm[key]}
+                          onChange={setProfileField(key)}
+                          placeholder={ph}
+                          inputMode={mode}
+                          className={INPUT_CLS}
+                        />
+                      </div>
+                    ))}
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Barrio</label>
+                      <select value={profileForm.barrioId} onChange={setProfileField("barrioId")} className={INPUT_CLS}>
+                        <option value="">Seleccioná un barrio...</option>
+                        {neighborhoods.map((n) => (
+                          <option key={n._id} value={n._id}>{n.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Error de acción */}
               {actionError[selectedUser._id] && (
                 <p className="text-xs text-red-500 bg-red-50 border border-red-100 px-3 py-2.5 rounded-xl">
@@ -521,21 +703,6 @@ export default function AdminUsuariosTab() {
                 />
                 {formErrors.email && (
                   <p className="text-xs text-red-500 mt-1">{formErrors.email}</p>
-                )}
-              </div>
-
-              {/* Contraseña */}
-              <div className="space-y-1.5">
-                <Label className="text-sm font-medium text-slate-700">Contraseña</Label>
-                <Input
-                  type="password"
-                  value={form.password}
-                  onChange={handleField("password")}
-                  placeholder="Mínimo 6 caracteres"
-                  className={`rounded-xl border-slate-200 focus-visible:ring-primary/30 ${formErrors.password ? "border-red-500 focus-visible:ring-red-300" : ""}`}
-                />
-                {formErrors.password && (
-                  <p className="text-xs text-red-500 mt-1">{formErrors.password}</p>
                 )}
               </div>
 

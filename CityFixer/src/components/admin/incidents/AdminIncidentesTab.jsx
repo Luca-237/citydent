@@ -1,16 +1,16 @@
 import { useState, useMemo, useEffect } from "react";
-import { Plus, Search, X } from "lucide-react";
+import { Plus, Search, X, Archive } from "lucide-react";
 import AdminIncidentList from "./AdminIncidentList";
 import { useStatuses } from "@/hooks/useStatuses";
 import { capitalize, STATUS_LABELS } from "@/lib/incidents";
 
-const PRIORITY_LABELS = {
-  1: "Muy baja",
-  2: "Baja",
-  3: "Media",
-  4: "Alta",
-  5: "Crítica",
-};
+function getPriorityLabel(p) {
+  if (p <= 2) return "Muy baja";
+  if (p <= 4) return "Baja";
+  if (p <= 6) return "Media";
+  if (p <= 8) return "Alta";
+  return "Crítica";
+}
 
 const SELECT_CLASS =
   "text-xs rounded-xl bg-gray-100 text-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all cursor-pointer border-none";
@@ -23,11 +23,12 @@ export default function AdminIncidentesTab({
   focusedIncidentId,
   onClearFocus,
 }) {
+  const [activeTab, setActiveTab] = useState("activos");
   const [filters, setFilters] = useState({
     status: "todos",
     category: "todas",
     priority: "todas",
-    userSearch: "",
+    search: "",
   });
   const { statuses } = useStatuses();
 
@@ -35,26 +36,38 @@ export default function AdminIncidentesTab({
     status: "todos",
     category: "todas",
     priority: "todas",
-    userSearch: "",
+    search: "",
   };
   const set = (key) => (value) =>
     setFilters((prev) => ({ ...prev, [key]: value }));
   const clearFilters = () => setFilters(DEFAULTS);
 
-  // Cuando llega un incidente desde el buscador global, limpia los filtros para que sea visible
+  // Split activos / archivados
+  const activeIncidents   = useMemo(() => incidents.filter((g) => !g.isArchived), [incidents]);
+  const archivedIncidents = useMemo(() => incidents.filter((g) =>  g.isArchived), [incidents]);
+  const sourceList = activeTab === "activos" ? activeIncidents : archivedIncidents;
+  const isReadOnly = activeTab === "archivados";
+
+  // Al cambiar de tab, limpiar filtros
+  useEffect(() => { clearFilters(); }, [activeTab]);
+
+  // Cuando llega un incidente desde el buscador global, volver a activos y limpiar filtros
   useEffect(() => {
-    if (focusedIncidentId) clearFilters();
+    if (focusedIncidentId) {
+      setActiveTab("activos");
+      clearFilters();
+    }
   }, [focusedIncidentId]);
+
   const hasActiveFilters =
     filters.status !== "todos" ||
     filters.category !== "todas" ||
     filters.priority !== "todas" ||
-    filters.userSearch.trim() !== "";
+    filters.search.trim() !== "";
 
-  // Categorías únicas derivadas de los incidentes cargados — sin llamada extra a la API
   const categories = useMemo(() => {
     const seen = new Set();
-    return incidents
+    return sourceList
       .filter(
         (inc) =>
           inc.category?.name &&
@@ -62,12 +75,14 @@ export default function AdminIncidentesTab({
           seen.add(inc.category.name),
       )
       .map((inc) => ({ _id: inc.category._id, name: inc.category.name }));
-  }, [incidents]);
+  }, [sourceList]);
 
   const filtered = useMemo(() => {
-    let result = incidents;
+    let result = sourceList;
 
-    if (filters.status !== "todos")
+    if (filters.status === "dudoso")
+      result = result.filter((inc) => inc.representativeId?.is_dubious === true);
+    else if (filters.status !== "todos")
       result = result.filter((inc) => inc.status?.name === filters.status);
 
     if (filters.category !== "todas")
@@ -78,113 +93,136 @@ export default function AdminIncidentesTab({
         (inc) => inc.priority === Number(filters.priority),
       );
 
-    if (filters.userSearch.trim().length >= 3) {
-      const q = filters.userSearch.trim().toLowerCase();
+    if (filters.search.trim().length >= 2) {
+      const q = filters.search.trim().toLowerCase();
       result = result.filter((inc) => {
-        const name = [inc.user?.firstName, inc.user?.lastName]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        const email = (inc.user?.email ?? "").toLowerCase();
-        return name.includes(q) || email.includes(q);
+        const rep   = inc.representativeId;
+        const title   = (rep?.title ?? "").toLowerCase();
+        const address = (rep?.location?.address ?? "").toLowerCase();
+        const u = rep?.user;
+        const userName = [u?.firstName, u?.lastName].filter(Boolean).join(" ").toLowerCase();
+        const email    = (u?.email ?? "").toLowerCase();
+        return title.includes(q) || address.includes(q) || userName.includes(q) || email.includes(q);
       });
     }
 
     return result;
-  }, [incidents, filters]);
+  }, [sourceList, filters]);
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── NUEVA CABECERA: Título a la izquierda, Botón a la derecha ── */}
+
+      {/* ── Cabecera ── */}
       <div className="flex justify-between items-center">
         <div>
-<h2 className="text-2xl font-bold text-[#292D60]">
-          Gestión de Incidentes
-        </h2>
-        <p className="text-xs text-gray-400">
-          {loading
-            ? "—"
-            : `${filtered.length} incidente${filtered.length !== 1 ? "s" : ""}`}
-        </p>
+          <h2 className="text-2xl font-bold text-[#292D60]">Gestión de Incidentes</h2>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {loading ? "—" : `${filtered.length} ${isReadOnly ? "archivado" : "incidente"}${filtered.length !== 1 ? "s" : ""}`}
+          </p>
         </div>
-        
-        <button
-          onClick={onNuevoReporte}
-          className="flex items-center justify-center px-2.5 py-1.5 rounded-xl bg-primary hover:bg-celestito text-white text-sm font-semibold gap-1.5 transition-colors"
-        >
-          <Plus size={15} />
-          Reportar Incidente
-        </button>
+        {!isReadOnly && (
+          <button
+            onClick={onNuevoReporte}
+            className="shrink-0 flex items-center justify-center px-2.5 py-1.5 rounded-xl bg-primary hover:bg-celestito text-white text-sm font-semibold gap-1.5 transition-colors"
+          >
+            <Plus size={15} />
+            Reportar Incidente
+          </button>
+        )}
       </div>
 
-      {/* Fila única: Búsqueda + Selects + Botón Limpiar */}
+      {/* ── Banner info archivados ── */}
+      {isReadOnly && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl">
+          <Archive size={13} className="text-slate-400 shrink-0" />
+          <p className="text-xs text-slate-500">
+            Los grupos archivados son de solo lectura. No se pueden modificar estado ni categoría.
+          </p>
+        </div>
+      )}
+
+      {/* ── Filtros + tabs ── */}
       <div className="flex gap-2 flex-wrap items-start">
-        {/* Buscador */}
-        <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
-          <div className="relative">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-            />
-            <input
-              type="text"
-              placeholder="Buscar por usuario..."
-              value={filters.userSearch}
-              onChange={(e) => set("userSearch")(e.target.value)}
-              className="w-full pl-8 pr-4 py-2 text-xs rounded-xl bg-gray-100 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all"
-            />
-          </div>
-          {filters.userSearch.trim().length > 0 &&
-            filters.userSearch.trim().length < 3 && (
-              <p className="text-xs text-gray-400 pl-1">
-                Ingresá al menos 3 caracteres.
-              </p>
+
+        {/* Tab switcher */}
+        <div className="flex items-center gap-0.5 bg-gray-100 p-0.5 rounded-xl shrink-0">
+          <button
+            onClick={() => setActiveTab("activos")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === "activos"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            Activos
+            {!loading && (
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                activeTab === "activos" ? "bg-primary/10 text-primary" : "bg-slate-200 text-slate-500"
+              }`}>
+                {activeIncidents.length}
+              </span>
             )}
+          </button>
+          <button
+            onClick={() => setActiveTab("archivados")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === "archivados"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <Archive size={11} />
+            Archivados
+            {!loading && archivedIncidents.length > 0 && (
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                activeTab === "archivados" ? "bg-slate-100 text-slate-600" : "bg-slate-200 text-slate-500"
+              }`}>
+                {archivedIncidents.length}
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* Estado */}
-        <select
-          value={filters.status}
-          onChange={(e) => set("status")(e.target.value)}
-          className={SELECT_CLASS}
-        >
+        {/* Divisor vertical */}
+        <div className="w-px h-8 bg-gray-200 self-center shrink-0" />
+
+        <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Buscar por título, dirección o usuario..."
+              value={filters.search}
+              onChange={(e) => set("search")(e.target.value)}
+              className="w-full pl-8 pr-4 py-2 text-xs rounded-xl bg-white border border-gray-200 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all shadow-sm"
+            />
+          </div>
+          {filters.search.trim().length === 1 && (
+            <p className="text-xs text-gray-400 pl-1">Ingresá al menos 2 caracteres.</p>
+          )}
+        </div>
+
+        <select value={filters.status} onChange={(e) => set("status")(e.target.value)} className={SELECT_CLASS}>
           <option value="todos">Todos los estados</option>
           {statuses.map((s) => (
-            <option key={s._id} value={s.name}>
-              {STATUS_LABELS[s.name] ?? capitalize(s.name)}
-            </option>
+            <option key={s._id} value={s.name}>{STATUS_LABELS[s.name] ?? capitalize(s.name)}</option>
           ))}
         </select>
 
-        {/* Categoría */}
-        <select
-          value={filters.category}
-          onChange={(e) => set("category")(e.target.value)}
-          className={SELECT_CLASS}
-        >
+        <select value={filters.category} onChange={(e) => set("category")(e.target.value)} className={SELECT_CLASS}>
           <option value="todas">Todas las categorías</option>
           {categories.map((cat) => (
-            <option key={cat._id} value={cat.name}>
-              {capitalize(cat.name)}
-            </option>
+            <option key={cat._id} value={cat.name}>{capitalize(cat.name)}</option>
           ))}
         </select>
 
-        {/* Prioridad */}
-        <select
-          value={filters.priority}
-          onChange={(e) => set("priority")(e.target.value)}
-          className={SELECT_CLASS}
-        >
+        <select value={filters.priority} onChange={(e) => set("priority")(e.target.value)} className={SELECT_CLASS}>
           <option value="todas">Todas las prioridades</option>
-          {[1, 2, 3, 4, 5].map((p) => (
-            <option key={p} value={p}>
-              {p} — {PRIORITY_LABELS[p]}
-            </option>
+          {Array.from({ length: 10 }, (_, i) => i + 1).map((p) => (
+            <option key={p} value={p}>{p} — {getPriorityLabel(p)}</option>
           ))}
         </select>
 
-        {/* Contador + Limpiar */}
         <div className="flex items-center gap-3 shrink-0 ml-auto">
           {hasActiveFilters && (
             <button
@@ -204,6 +242,7 @@ export default function AdminIncidentesTab({
         onUpdated={onUpdated}
         focusedIncidentId={focusedIncidentId}
         onClearFocus={onClearFocus}
+        isReadOnly={isReadOnly}
       />
     </div>
   );

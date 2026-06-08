@@ -1,6 +1,7 @@
-import { X, Loader2, User } from "lucide-react";
-import { useState } from "react";
+import { X, Loader2, User, AlertTriangle, Users } from "lucide-react";
+import { useState, useEffect } from "react";
 import { cancelIncident } from "@/services/api";
+import { useNotificationContext } from "@/context/NotificationContext";
 import StatusHistory from "@/components/admin/incidents/StatusHistory";
 import AIInsights from "@/components/admin/incidents/AIInsights";
 import {
@@ -23,7 +24,7 @@ function formatExactDate(dateStr) {
 import PhotoGallery from "./PhotoGallery";
 import LocationPanel from "./LocationPanel";
 
-const CANCELABLE_STATUSES = ["pendiente", "dudoso"];
+const CANCELABLE_STATUSES = ["pendiente", "aceptado"];
 
 const STATUS_BADGE_STYLES = {
   pendiente:  "bg-amber-50 text-amber-700 border border-amber-200",
@@ -45,6 +46,14 @@ export default function IncidentDetailSheet({
 }) {
   const [cancelling, setCancelling]   = useState(false);
   const [cancelError, setCancelError] = useState(null);
+  const notiCtx = useNotificationContext();
+
+  // Marcar notificaciones como leídas al abrir el detalle (solo ciudadano)
+  useEffect(() => {
+    if (!isAdmin && incident?._id && notiCtx) {
+      notiCtx.markByIncident(incident._id);
+    }
+  }, [incident?._id, isAdmin]);
 
   if (!incident) return null;
 
@@ -66,7 +75,10 @@ export default function IncidentDetailSheet({
 
   const label     = STATUS_LABELS[statusKey] ?? capitalize(statusKey);
   const statusCls = STATUS_BADGE_STYLES[statusKey] ?? "bg-gray-50 text-gray-500 border border-gray-200";
-  const location  = incident.location;
+
+  // En contexto admin, `incident` es un grupo — los datos de display viven en representativeId
+  const display = isAdmin ? (incident.representativeId ?? {}) : incident;
+  const location = display.location;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -80,7 +92,7 @@ export default function IncidentDetailSheet({
         <div className="shrink-0 px-5 pt-5 pb-4 border-b border-slate-100">
           <div className="flex items-start justify-between gap-3">
             <SheetTitle className="text-lg font-bold text-slate-900 leading-snug flex-1">
-              {incident.title}
+              {display.title}
             </SheetTitle>
             <button
               onClick={() => onOpenChange(false)}
@@ -99,11 +111,23 @@ export default function IncidentDetailSheet({
             <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
               {capitalize(incident.category?.name)}
             </span>
-            <span className="text-xs text-slate-400">{formatExactDate(incident.createdAt)}</span>
-            {incident.user?.firstName && (
+            <span className="text-xs text-slate-400">{formatExactDate(display.createdAt)}</span>
+            {display.user?.firstName && (
               <span className="text-xs text-slate-400 flex items-center gap-1">
                 <User size={11} className="shrink-0" />
-                {incident.user.firstName} {incident.user.lastName}
+                {display.user.firstName} {display.user.lastName}
+              </span>
+            )}
+            {isAdmin && incident.incidents?.length > 1 && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                <Users size={10} />
+                {incident.incidents.length} reportes
+              </span>
+            )}
+            {isAdmin && incident.representativeId?.is_dubious && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
+                <AlertTriangle size={10} />
+                Dudoso
               </span>
             )}
           </div>
@@ -127,7 +151,7 @@ export default function IncidentDetailSheet({
                 Descripción
               </p>
               <p className="text-sm text-slate-600 leading-relaxed">
-                {incident.description || "Sin descripción."}
+                {display.description || "Sin descripción."}
               </p>
             </div>
 
@@ -136,7 +160,7 @@ export default function IncidentDetailSheet({
               <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
                 Fotos
               </p>
-              <PhotoGallery photos={incident.photos} compact />
+              <PhotoGallery photos={display.photos} compact />
             </div>
 
             {/* ── Secciones admin ── */}
@@ -159,7 +183,7 @@ export default function IncidentDetailSheet({
 
                 {/* Historial */}
                 <div className="px-5 py-4">
-                  <StatusHistory incidentId={incident._id} />
+                  <StatusHistory groupId={incident._id} />
                 </div>
               </>
             )}

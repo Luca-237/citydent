@@ -1,36 +1,36 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter } from "react-router-dom";
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useAuth, useUser, useClerk } from "@clerk/clerk-react";
 import AppRouter from "./routes/AppRouter";
-import DniSetupScreen from "./components/auth/DniSetupScreen";
+import ProfileSetupScreen from "./components/auth/ProfileSetupScreen";
+import { NotificationProvider } from "./context/NotificationContext";
 import api from "./services/api";
 
 function App() {
   const { isSignedIn, getToken, isLoaded } = useAuth();
   const { user } = useUser();
-  const [isSynced, setIsSynced] = useState(false);
-  const [dbRole, setDbRole] = useState(null);
-  const [needsDni, setNeedsDni] = useState(false);
-  const [dniLoading, setDniLoading] = useState(false);
+  const { signOut } = useClerk();
+  const [isSynced, setIsSynced]             = useState(false);
+  const [dbRole, setDbRole]                 = useState(null);
+  const [needsProfile, setNeedsProfile]     = useState(false);
 
-  const dniKey = user ? `cityfixer_dni_${user.id}` : null;
-
-  const sincronizar = async (dni) => {
+  const sincronizar = async () => {
     try {
       const token = await getToken();
       const { data } = await api.post(
         "/auth/login",
         {
-          email: user.primaryEmailAddress?.emailAddress,
+          email:     user.primaryEmailAddress?.emailAddress,
           firstName: user.firstName,
-          lastName: user.lastName,
-          imageUrl: user.imageUrl,
-          dni,
+          lastName:  user.lastName,
+          imageUrl:  user.imageUrl,
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      localStorage.setItem(dniKey, dni);
       setDbRole(data.user?.role?.name ?? "user");
+      if (!data.user?.profileComplete) {
+        setNeedsProfile(true);
+      }
     } catch (error) {
       console.error("Error sincronizando usuario:", error);
     } finally {
@@ -40,38 +40,29 @@ function App() {
 
   useEffect(() => {
     if (!isLoaded) return;
-
-    if (!isSignedIn) {
-      setIsSynced(true);
-      return;
-    }
-
-    const dni = localStorage.getItem(dniKey);
-    if (dni) {
-      sincronizar(dni);
-    } else {
-      setNeedsDni(true);
-    }
+    if (!isSignedIn) { setIsSynced(true); return; }
+    sincronizar();
   }, [isLoaded, isSignedIn]);
 
-  const handleDniSubmit = async (dni) => {
-    setDniLoading(true);
-    await sincronizar(dni);
-    setNeedsDni(false);
-    setDniLoading(false);
-  };
+  const handleProfileComplete = () => setNeedsProfile(false);
 
   if (!isLoaded) return null;
 
-  if (isSignedIn && needsDni) {
-    return <DniSetupScreen onSubmit={handleDniSubmit} loading={dniLoading} />;
+  if (isSignedIn && isSynced && needsProfile) {
+    return <ProfileSetupScreen onComplete={handleProfileComplete} onSignOut={() => signOut()} />;
   }
 
   if (!isSynced) return null;
 
   return (
     <BrowserRouter>
-      <AppRouter dbRole={dbRole} />
+      {isSignedIn ? (
+        <NotificationProvider>
+          <AppRouter dbRole={dbRole} />
+        </NotificationProvider>
+      ) : (
+        <AppRouter dbRole={dbRole} />
+      )}
     </BrowserRouter>
   );
 }

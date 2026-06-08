@@ -14,7 +14,7 @@ const verifyRole = (...roles) => {
         return res.status(403).json({ error: 'Tu cuenta ha sido suspendida.' });
       }
 
-      if (!roles.includes(dbUser.role.name)) {
+      if (!dbUser.role?.name || !roles.includes(dbUser.role.name)) {
         return res.status(403).json({ error: 'No tenés permisos para realizar esta acción.' });
       }
 

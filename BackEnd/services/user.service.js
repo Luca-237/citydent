@@ -22,6 +22,7 @@ const getUsers = async () => {
   const excludeIds = aiRole ? [aiRole._id] : [];
   return await User.find({ role: { $nin: excludeIds } })
     .populate('role')
+    .populate('barrio', 'name')
     .sort({ createdAt: -1 });
 };
 

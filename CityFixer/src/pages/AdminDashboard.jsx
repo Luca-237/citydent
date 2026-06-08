@@ -15,8 +15,8 @@ export default function AdminDashboard({ dbRole }) {
   const [reportOpen, setReportOpen]             = useState(false);
   const [mobileOpen, setMobileOpen]             = useState(false);
   const [focusedIncidentId, setFocusedIncidentId] = useState(null);
-  const { incidents, loading, refresh } = useAllIncidents();
-  const notifications = useNotifications(incidents);
+  const { groups, loading, refresh } = useAllIncidents();
+  const notifications = useNotifications(groups);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100">
@@ -48,7 +48,7 @@ export default function AdminDashboard({ dbRole }) {
         <AdminTopbar
           dbRole={dbRole}
           onMobileMenuOpen={() => setMobileOpen(true)}
-          incidents={incidents}
+          incidents={groups}
           notifications={notifications}
           onTabChange={setActiveTab}
           onFocusIncident={setFocusedIncidentId}
@@ -60,7 +60,7 @@ export default function AdminDashboard({ dbRole }) {
             {/* Visible para admin y superAdmin */}
             {activeTab === "incidentes" && (
               <AdminIncidentesTab
-                incidents={incidents}
+                incidents={groups}
                 loading={loading}
                 onUpdated={refresh}
                 onNuevoReporte={() => setReportOpen(true)}
@@ -71,7 +71,7 @@ export default function AdminDashboard({ dbRole }) {
 
             {/* Visible para admin y superAdmin */}
             {activeTab === "estadisticas" && (
-              <AdminEstadisticasTab incidents={incidents} loading={loading} />
+              <AdminEstadisticasTab incidents={groups} loading={loading} dbRole={dbRole} />
             )}
 
             {/* EXCLUSIVO SUPERADMIN */}

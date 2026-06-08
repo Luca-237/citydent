@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Bot, UserCog, User } from "lucide-react";
-import { getIncidentHistory } from "@/services/api";
+import { getGroupHistory } from "@/services/api";
 import { STATUS_LABELS, capitalize, getStatusStyle } from "@/lib/incidents";
 
 function formatDateTime(dateStr) {
@@ -20,18 +20,18 @@ const SOURCE_CONFIG = {
   user:  { label: "Usuario", icon: User,    className: "bg-gray-100 text-gray-600"     },
 };
 
-export default function StatusHistory({ incidentId }) {
+export default function StatusHistory({ groupId }) {
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (history !== null) return;
     setLoading(true);
-    getIncidentHistory(incidentId)
-      .then((res) => setHistory(res.data.incident?.statusHistory ?? []))
+    getGroupHistory(groupId)
+      .then((res) => setHistory(res.data.group?.statusHistory ?? []))
       .catch(() => setHistory([]))
       .finally(() => setLoading(false));
-  }, [incidentId, history]);
+  }, [groupId, history]);
 
   return (
     <section>

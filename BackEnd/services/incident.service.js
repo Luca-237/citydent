@@ -1,6 +1,7 @@
 const Incident = require('../models/incident');
 const IncidentGroup = require('../models/incidentGroup');
 const Status = require('../models/status');
+const User = require('../models/user');
 const mongoose = require('mongoose');
 const { createNotifications } = require('./notification.service');
 
@@ -84,7 +85,8 @@ const createIncident = async (incidentData, userId, aiData, userRole = 'user') =
   const isRechazado = aiData?.estadoSugerido === 'rechazado';
   const incidentStatusId = isRechazado ? rechazadoStatus._id : pendienteStatus._id;
   const grupoStatusId = isRechazado ? rechazadoStatus._id : pendienteStatus._id;
-  const changedBy = process.env.AI_USER_ID;
+  const aiUser = await User.findOne({ clerkId: 'ai_system' }).select('_id');
+  const changedBy = aiUser?._id ?? null;
   const source = 'ai';
 
   const newIncident = new Incident({

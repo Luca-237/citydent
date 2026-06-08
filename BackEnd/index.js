@@ -13,6 +13,7 @@ const statusRoutes = require('./routes/status.routes');
 const userRoutes = require('./routes/user.routes');
 const externalRoutes = require('./routes/external.routes');
 const notificationRoutes = require('./routes/notification.routes');
+const neighborhoodRoutes = require('./routes/neighborhood.routes');
 const { setupSocket } = require('./services/socket.service');
 
 const app = express();
@@ -50,6 +51,7 @@ app.use('/api/statuses', statusRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/external', externalRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/neighborhoods', neighborhoodRoutes);
 
 server.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);

@@ -29,7 +29,7 @@ const analizarIncidenteIA = async (title, description, gruposCercanos = []) => {
       TÍTULO: "${title}"
       DESCRIPCIÓN: "${description}"
 
-      --- GRUPOS DE INCIDENTES CERCANOS (radio 500m) ---
+      --- GRUPOS DE INCIDENTES CERCANOS (radio 20m) ---
       ${listadoCercanos}
 
       REGLAS DE EVALUACIÓN:
@@ -43,9 +43,9 @@ const analizarIncidenteIA = async (title, description, gruposCercanos = []) => {
          - "isEmergency": true si requiere intervención urgente de policía, bomberos o ambulancia (accidentes graves, incendios, etc).
          - Un reporte puede ser rechazado Y emergencia al mismo tiempo.
 
-      3. PRIORIDAD: número del 1 al 5 según gravedad y urgencia.
+      3. PRIORIDAD: número del 1 al 10 según gravedad y urgencia.
          - 1: baja (ej. bache pequeño)
-         - 5: alta (ej. árbol caído bloqueando calle)
+         - 10: alta (ej. árbol caído bloqueando calle)
 
       4. CATEGORÍA: sugiere una (ej: "bache", "alumbrado", "basura", "vandalismo", "otro").
 

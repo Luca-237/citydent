@@ -62,6 +62,34 @@ export const updateIncidentPriority = (id, priority) =>
 // Trae el historial de estados de un incidente (solo admin/superAdmin)
 export const getIncidentHistory = (id) => api.get(`/api/incidents/${id}/history`);
 
+// Trae el historial de estados del grupo (solo admin/superAdmin)
+export const getGroupHistory = (groupId) => api.get(`/api/incidents/${groupId}/group-history`);
+
+// ─── Perfil de usuario ────────────────────────────────────────────────────────
+
+// Trae el perfil del usuario autenticado
+export const getMyProfile = () => api.get("/api/users/me");
+
+// Envía un OTP al mail del usuario para verificar identidad en el onboarding
+export const sendVerificationCode = () => api.post("/api/users/me/send-verification");
+
+// Completa o actualiza el perfil del usuario autenticado
+export const patchProfile = (body) => api.patch("/api/users/me", body);
+
+// ─── Barrios ──────────────────────────────────────────────────────────────────
+
+export const getNeighborhoods = () => api.get("/api/neighborhoods");
+
+// ─── Notificaciones de usuario ────────────────────────────────────────────────
+
+export const getNotifications            = ()   => api.get("/api/notifications");
+export const markAllNotificationsRead    = ()   => api.patch("/api/notifications/read-all");
+export const markNotificationsByIncident = (id) => api.patch(`/api/notifications/by-incident/${id}/read`);
+
+// ─── Power BI ─────────────────────────────────────────────────────────────────
+
+export const requestPowerBiOtp = () => api.post("/api/external/request-otp");
+
 // ─── Admin — Categorías ───────────────────────────────────────────────────────
 
 // Crea una nueva categoría (solo superAdmin)
@@ -81,6 +109,7 @@ export const getUsers = () => api.get("/api/users");
 export const getRoles = () => api.get("/api/users/roles");
 export const createUser = (body) => api.post("/api/users", body);
 export const updateUserRole = (id, roleId) => api.patch(`/api/users/${id}/role`, { role: roleId });
+export const updateUserProfile = (id, body) => api.patch(`/api/users/${id}/profile`, body);
 export const updateUserBan = (id, isBanned) => api.patch(`/api/users/${id}/ban`, { isBanned });
 
 export default api;
