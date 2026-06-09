@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle, Lock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useStatuses } from "@/hooks/useStatuses";
@@ -42,6 +42,9 @@ function StatusConfirmDialog({ targetStatus, open, onOpenChange, onConfirm, load
   );
 }
 
+const DUBIOUS_ALLOWED = ["aceptado", "rechazado"];
+const FINAL_STATES    = new Set(["resuelto", "rechazado", "cancelado"]);
+
 export default function IncidentAdminActions({ incident, onUpdated }) {
   const { statuses } = useStatuses();
   const [categories, setCategories] = useState([]);
@@ -49,6 +52,13 @@ export default function IncidentAdminActions({ incident, onUpdated }) {
   const [confirmStatus, setConfirmStatus] = useState(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [loadingCategory, setLoadingCategory] = useState(false);
+
+  const currentStatus = incident.status?.name;
+  const isFinal   = FINAL_STATES.has(currentStatus);
+  const isDubious  = incident.representativeId?.is_dubious ?? false;
+  const visibleStatuses = isDubious
+    ? statuses.filter((s) => DUBIOUS_ALLOWED.includes(s.name))
+    : statuses;
 
   useEffect(() => {
     getCategorias()
@@ -81,39 +91,63 @@ export default function IncidentAdminActions({ incident, onUpdated }) {
 
   return (
     <>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-6">
+      <div className="flex flex-col gap-4">
+
+        {/* Banner dudoso */}
+        {isDubious && (
+          <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-orange-50 border border-orange-200">
+            <AlertTriangle size={14} className="shrink-0 text-orange-500 mt-0.5" />
+            <p className="text-xs text-orange-700 leading-snug">
+              Este incidente fue marcado como <span className="font-semibold">dudoso</span> por la IA. Solo podés cambiarlo a <span className="font-semibold">Aceptado</span> o <span className="font-semibold">Rechazado</span>.
+            </p>
+          </div>
+        )}
 
         {/* Estado */}
-        <div className="flex flex-col gap-2 sm:shrink-0">
+        <div className="flex flex-col gap-2">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Estado</p>
-          <div className="flex flex-wrap gap-1.5">
-            {statuses.map((s) => {
-              const isCurrent = s.name === incident.status?.name;
-              const st = getStatusStyle(s.name);
-              return (
-                <button
-                  key={s._id}
-                  disabled={isCurrent}
-                  onClick={() => setConfirmStatus(s)}
-                  className={`shrink-0 flex items-center gap-1 text-[11px] font-semibold px-3 py-1.5 rounded-full transition-all ${
-                    isCurrent
-                      ? `${st.bg} ${st.text} ring-1 ring-current cursor-default`
-                      : `${st.bg} ${st.text} opacity-40 hover:opacity-100 cursor-pointer`
-                  }`}
-                >
-                  {isCurrent && <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />}
-                  {STATUS_LABELS[s.name] ?? capitalize(s.name)}
-                </button>
-              );
-            })}
-          </div>
+          {isFinal ? (
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200">
+              <Lock size={13} className="shrink-0 text-slate-400" />
+              <div>
+                <p className="text-xs font-semibold text-slate-600">
+                  {STATUS_LABELS[currentStatus] ?? capitalize(currentStatus)} — estado final
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Este grupo ya no puede cambiar de estado.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {visibleStatuses.map((s) => {
+                const isCurrent = s.name === currentStatus;
+                const st = getStatusStyle(s.name);
+                return (
+                  <button
+                    key={s._id}
+                    disabled={isCurrent}
+                    onClick={() => setConfirmStatus(s)}
+                    className={`shrink-0 flex items-center gap-1 text-[11px] font-semibold px-3 py-1.5 rounded-full transition-all ${
+                      isCurrent
+                        ? `${st.bg} ${st.text} ring-1 ring-current cursor-default`
+                        : `${st.bg} ${st.text} opacity-40 hover:opacity-100 cursor-pointer`
+                    }`}
+                  >
+                    {isCurrent && <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />}
+                    {STATUS_LABELS[s.name] ?? capitalize(s.name)}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Divisor vertical (solo desktop) */}
-        <div className="hidden sm:block w-px bg-gray-100 self-stretch" />
+        {/* Divisor */}
+        <div className="w-full h-px bg-gray-100" />
 
         {/* Categoría */}
-        <div className="flex flex-col gap-2 sm:flex-1 min-w-0">
+        <div className="flex flex-col gap-2 min-w-0">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Categoría</p>
           <div className="flex gap-2">
             <select

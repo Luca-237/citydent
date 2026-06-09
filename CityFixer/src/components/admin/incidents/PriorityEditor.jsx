@@ -2,22 +2,21 @@ import { useState } from "react";
 import { Pencil, Check, X } from "lucide-react";
 import { updateIncidentPriority } from "@/services/api";
 
-const PRIORITY_CONFIG = [
-  { label: "Muy baja", bar: "bg-[#22C55E]", text: "text-green-700",  bg: "bg-green-100"  },
-  { label: "Baja",     bar: "bg-[#84CC16]", text: "text-lime-700",   bg: "bg-lime-100"   },
-  { label: "Media",    bar: "bg-[#EAB308]", text: "text-yellow-700", bg: "bg-yellow-100" },
-  { label: "Alta",     bar: "bg-[#F97316]", text: "text-orange-700", bg: "bg-orange-100" },
-  { label: "Crítica",  bar: "bg-[#EF4444]", text: "text-red-700",    bg: "bg-red-100"    },
-];
+function getPriorityConfig(p) {
+  if (p <= 2)  return { label: "Muy baja", bar: "bg-green-400",   text: "text-green-700",   bg: "bg-green-100"   };
+  if (p <= 4)  return { label: "Baja",     bar: "bg-lime-400",    text: "text-lime-700",    bg: "bg-lime-100"    };
+  if (p <= 6)  return { label: "Media",    bar: "bg-amber-400",   text: "text-amber-700",   bg: "bg-amber-100"   };
+  if (p <= 8)  return { label: "Alta",     bar: "bg-orange-500",  text: "text-orange-700",  bg: "bg-orange-100"  };
+               return { label: "Crítica",  bar: "bg-red-500",     text: "text-red-700",     bg: "bg-red-100"     };
+}
 
 export default function PriorityEditor({ incidentId, priority, onUpdated }) {
-  const [editing, setEditing] = useState(false);
+  const [editing,  setEditing]  = useState(false);
   const [selected, setSelected] = useState(null);
-  const [saving, setSaving] = useState(false);
+  const [saving,   setSaving]   = useState(false);
 
-  const cfg = PRIORITY_CONFIG[priority - 1];
-  const activeCfg = editing && selected ? PRIORITY_CONFIG[selected - 1] : cfg;
   const activeValue = editing && selected ? selected : priority;
+  const cfg         = getPriorityConfig(activeValue);
 
   const handleConfirm = async () => {
     if (!selected || selected === priority) { setEditing(false); return; }
@@ -40,8 +39,8 @@ export default function PriorityEditor({ incidentId, priority, onUpdated }) {
       <div className="flex items-center justify-between">
         <span className="text-xs text-gray-500 font-medium">Prioridad</span>
         <div className="flex items-center gap-2">
-          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${activeCfg.bg} ${activeCfg.text}`}>
-            {activeValue}/5 — {activeCfg.label}
+          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.text}`}>
+            {activeValue}/10 — {cfg.label}
           </span>
           {!editing && (
             <button
@@ -54,33 +53,40 @@ export default function PriorityEditor({ incidentId, priority, onUpdated }) {
         </div>
       </div>
 
-      {/* Barra de progreso */}
-      <div className="flex gap-1">
-        {PRIORITY_CONFIG.map((p, i) => (
-          <div
-            key={i}
-            className={`h-1.5 flex-1 rounded-full transition-all ${i < activeValue ? p.bar : "bg-gray-200"}`}
-          />
-        ))}
+      {/* Barra de progreso (10 segmentos) */}
+      <div className="flex gap-0.5">
+        {Array.from({ length: 10 }, (_, i) => {
+          const segCfg = getPriorityConfig(i + 1);
+          return (
+            <div
+              key={i}
+              className={`h-1.5 flex-1 rounded-full transition-all ${i < activeValue ? segCfg.bar : "bg-gray-200"}`}
+            />
+          );
+        })}
       </div>
 
       {/* Selector (solo en modo edición) */}
       {editing && (
         <div className="flex flex-col gap-2 pt-1">
-          <div className="flex gap-1.5">
-            {PRIORITY_CONFIG.map((p, i) => (
-              <button
-                key={i}
-                onClick={() => setSelected(i + 1)}
-                className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all border-2 ${
-                  selected === i + 1
-                    ? `${p.bg} ${p.text} border-current`
-                    : "bg-white text-gray-400 border-gray-200 hover:border-gray-300"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
+          <div className="flex gap-1">
+            {Array.from({ length: 10 }, (_, i) => {
+              const p    = i + 1;
+              const pcfg = getPriorityConfig(p);
+              return (
+                <button
+                  key={p}
+                  onClick={() => setSelected(p)}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all border-2 ${
+                    selected === p
+                      ? `${pcfg.bg} ${pcfg.text} border-current`
+                      : "bg-white text-gray-400 border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  {p}
+                </button>
+              );
+            })}
           </div>
           <div className="flex gap-2">
             <button
