@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Loader2, Mail, CheckCircle2 } from "lucide-react";
 import { sendVerificationCode, patchProfile, getNeighborhoods } from "@/services/api";
+import { Combobox } from "@/components/ui/combobox";
 
 const GEOREF = "https://apis.datos.gob.ar/georef/api";
 
@@ -23,6 +24,23 @@ function Field({ label, error, children }) {
       {children}
       {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
+  );
+}
+
+function ComboboxField({ label, error, value, onSelect, options, placeholder, emptyText, disabled, loading }) {
+  return (
+    <Field label={label} error={error}>
+      <Combobox
+        value={value}
+        onSelect={onSelect}
+        options={options}
+        placeholder={placeholder}
+        emptyText={emptyText}
+        disabled={disabled}
+        loading={loading}
+        className={INPUT_CLS}
+      />
+    </Field>
   );
 }
 
@@ -79,19 +97,6 @@ export default function ProfileSetupScreen({ onComplete, onSignOut }) {
   const set = (key) => (e) => {
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
     setErrors((prev) => ({ ...prev, [key]: null }));
-  };
-
-  const handleProvinciaChange = (e) => {
-    const id = e.target.value;
-    const selected = provincias.find((p) => p.id === id);
-    setProvinciaId(id);
-    setForm((prev) => ({ ...prev, provincia: selected?.nombre ?? "", ciudad: "", barrioId: "" }));
-    setErrors((prev) => ({ ...prev, provincia: null, ciudad: null, barrioId: null }));
-  };
-
-  const handleCiudadChange = (e) => {
-    setForm((prev) => ({ ...prev, ciudad: e.target.value, barrioId: "" }));
-    setErrors((prev) => ({ ...prev, ciudad: null, barrioId: null }));
   };
 
   const validate = () => {
@@ -160,6 +165,10 @@ export default function ProfileSetupScreen({ onComplete, onSignOut }) {
     }
   };
 
+  const provinciaOptions = provincias.map((p) => ({ value: p.id, label: p.nombre }));
+  const municipioOptions = municipios.map((m) => ({ value: m.id, label: m.nombre }));
+  const barrioOptions = neighborhoods.map((n) => ({ value: n._id, label: n.name }));
+
   return (
     <div className="min-h-screen bg-azul-oscuro flex flex-col items-center justify-center px-6 py-10">
       <div className="w-full max-w-sm flex flex-col gap-8">
@@ -218,57 +227,52 @@ export default function ProfileSetupScreen({ onComplete, onSignOut }) {
               />
             </Field>
 
-            <Field label="Provincia" error={errors.provincia ?? (georefError ? "No se pudo cargar. Revisá la conexión." : null)}>
-              <select
-                value={provinciaId}
-                onChange={handleProvinciaChange}
-                className={INPUT_CLS}
-                disabled={loadingProvincias || georefError}
-              >
-                <option value="">
-                  {loadingProvincias ? "Cargando..." : georefError ? "Error al cargar" : "Seleccioná una provincia..."}
-                </option>
-                {provincias.map((p) => (
-                  <option key={p.id} value={p.id}>{p.nombre}</option>
-                ))}
-              </select>
-            </Field>
+            <ComboboxField
+              label="Provincia"
+              error={errors.provincia ?? (georefError ? "No se pudo cargar. Revisá la conexión." : null)}
+              value={form.provincia}
+              onSelect={(opt) => {
+                setProvinciaId(opt.value);
+                setForm((prev) => ({ ...prev, provincia: opt.label, ciudad: "", barrioId: "" }));
+                setErrors((prev) => ({ ...prev, provincia: null, ciudad: null, barrioId: null }));
+              }}
+              options={provinciaOptions}
+              placeholder="Seleccioná una provincia..."
+              emptyText="No se encontró la provincia."
+              disabled={loadingProvincias || georefError}
+              loading={loadingProvincias}
+            />
 
-            <Field label="Ciudad" error={errors.ciudad}>
-              <select
-                value={form.ciudad}
-                onChange={handleCiudadChange}
-                className={INPUT_CLS}
-                disabled={!provinciaId || loadingMunicipios}
-              >
-                <option value="">
-                  {!provinciaId
-                    ? "Primero seleccioná una provincia"
-                    : loadingMunicipios
-                    ? "Cargando..."
-                    : "Seleccioná una ciudad..."}
-                </option>
-                {municipios.map((m) => (
-                  <option key={m.id} value={m.nombre}>{m.nombre}</option>
-                ))}
-              </select>
-            </Field>
+            <ComboboxField
+              label="Ciudad"
+              error={errors.ciudad}
+              value={form.ciudad}
+              onSelect={(opt) => {
+                setForm((prev) => ({ ...prev, ciudad: opt.label, barrioId: "" }));
+                setErrors((prev) => ({ ...prev, ciudad: null, barrioId: null }));
+              }}
+              options={municipioOptions}
+              placeholder={!form.provincia ? "Primero seleccioná una provincia" : "Seleccioná una ciudad..."}
+              emptyText="No se encontró la ciudad."
+              disabled={!form.provincia || loadingMunicipios}
+              loading={loadingMunicipios}
+            />
 
             {isVillaMaria && (
-              <Field label="Barrio" error={errors.barrioId ?? (neighborhoodsError ? "No se pudieron cargar los barrios. Revisá la conexión." : null)}>
-                <select
-                  value={form.barrioId} onChange={set("barrioId")}
-                  className={INPUT_CLS}
-                  disabled={neighborhoodsError}
-                >
-                  <option value="">
-                    {neighborhoodsError ? "Error al cargar barrios" : neighborhoods.length === 0 ? "Cargando..." : "Seleccioná un barrio..."}
-                  </option>
-                  {neighborhoods.map((n) => (
-                    <option key={n._id} value={n._id}>{n.name}</option>
-                  ))}
-                </select>
-              </Field>
+              <ComboboxField
+                label="Barrio"
+                error={errors.barrioId ?? (neighborhoodsError ? "No se pudieron cargar los barrios." : null)}
+                value={neighborhoods.find((n) => n._id === form.barrioId)?.name ?? ""}
+                onSelect={(opt) => {
+                  setForm((prev) => ({ ...prev, barrioId: opt.value }));
+                  setErrors((prev) => ({ ...prev, barrioId: null }));
+                }}
+                options={barrioOptions}
+                placeholder="Seleccioná un barrio..."
+                emptyText="No se encontró el barrio."
+                disabled={neighborhoodsError || neighborhoods.length === 0}
+                loading={neighborhoods.length === 0 && !neighborhoodsError}
+              />
             )}
 
             <Field label="Código postal" error={errors.codigoPostal}>
