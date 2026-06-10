@@ -1,4 +1,4 @@
-//Generar un middel para hacer el upload a claudinary con las imagenes traidas en el post de incidentes, 
+// Generar un middel para hacer el upload a claudinary con las imagenes traidas en el post de incidentes, 
 // se debe rescatar la url de la imagen y parsear al objeto de incidente para grabar la url en la DB
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
@@ -25,8 +25,18 @@ const processIncidentData = async (req, res, next) => {
         req.files.map((file) =>
           new Promise((resolve, reject) => {
             cloudinary.uploader.upload_stream(
-              { folder: 'cityfixer/incidents' },
-              (error, result) => error ? reject(error) : resolve(result.secure_url)
+              { 
+                folder: 'cityfixer/incidents',
+                resource_type: 'auto', // Permite que Cloudinary acepte videos automáticamente
+                timeout: 120000        // Aumenta el tiempo límite a 120 segundos para evitar el error 499
+              },
+              (error, result) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(result.secure_url);
+                }
+              }
             ).end(file.buffer);
           })
         )
@@ -43,14 +53,20 @@ const processIncidentData = async (req, res, next) => {
 
     // Todo listo, pasamos el objeto req limpio al Controller
     next();
+  // ... (tu lógica de try)
   } catch (error) {
     console.error('Error en uploadToCloudinary middleware:', error);
     return res.status(500).json({ 
-      message: 'Error procesando los datos o subiendo imágenes', 
-      error: error.message 
+      message: 'Error procesando los datos o subiendo archivos (Timeout)', 
+      error: error.message,
+      // 👇 Agregamos el volcado de datos aquí
+      debugInfo: {
+        bodyRecibido: req.body,
+        archivosRecibidos: req.files ? req.files.map(f => ({ nombre: f.originalname, tamaño: f.size, tipo: f.mimetype })) : []
+      }
     });
   }
 };
 
 // Exportamos el middleware como un arreglo. Express ejecutará upload.array primero, y processIncidentData después.
-module.exports = [upload.array('photos', 3), processIncidentData];//
+module.exports = [upload.array('photos', 3), processIncidentData];
