@@ -14,7 +14,7 @@ function getPriorityLabel(p) {
 }
 
 const SELECT_CLASS =
-  "text-xs rounded-xl bg-gray-100 text-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all cursor-pointer border-none";
+  "w-full sm:w-auto text-xs rounded-xl bg-gray-100 text-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all cursor-pointer border-none";
 
 export default function AdminIncidentesTab({
   incidents,
@@ -116,7 +116,7 @@ export default function AdminIncidentesTab({
       {/* ── Cabecera ── */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-[#292D60]">Gestión de Incidentes</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#292D60]">Gestión de Incidentes</h2>
           <p className="text-xs text-gray-400 mt-0.5">
             {loading ? "—" : `${filtered.length} ${isReadOnly ? "archivado" : "incidente"}${filtered.length !== 1 ? "s" : ""}`}
           </p>
@@ -143,10 +143,10 @@ export default function AdminIncidentesTab({
       )}
 
       {/* ── Filtros + tabs ── */}
-      <div className="flex gap-2 flex-wrap items-start">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start">
 
         {/* Tab switcher */}
-        <div className="flex items-center gap-0.5 bg-gray-100 p-0.5 rounded-xl shrink-0">
+        <div className="flex items-center gap-0.5 bg-gray-100 p-0.5 rounded-xl shrink-0 self-start">
           <button
             onClick={() => setActiveTab("activos")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
@@ -184,10 +184,11 @@ export default function AdminIncidentesTab({
           </button>
         </div>
 
-        {/* Divisor vertical */}
-        <div className="w-px h-8 bg-gray-200 self-center shrink-0" />
+        {/* Divisor vertical — solo desktop */}
+        <div className="hidden sm:block w-px h-8 bg-gray-200 self-center shrink-0" />
 
-        <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
+        {/* Buscador — ancho completo en mobile */}
+        <div className="flex flex-col gap-1 w-full sm:flex-1 sm:min-w-[180px]">
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <input
@@ -203,53 +204,57 @@ export default function AdminIncidentesTab({
           )}
         </div>
 
-        <Select value={filters.status} onValueChange={set("status")}>
-          <SelectTrigger className={SELECT_CLASS}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos los estados</SelectItem>
-            {statuses.map((s) => (
-              <SelectItem key={s._id} value={s.name}>{STATUS_LABELS[s.name] ?? capitalize(s.name)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Selects: grilla 2×2 en mobile, inline en desktop */}
+        <div className="grid grid-cols-2 gap-2 sm:contents">
+          <Select value={filters.status} onValueChange={set("status")}>
+            <SelectTrigger className={SELECT_CLASS}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos los estados</SelectItem>
+              {statuses.map((s) => (
+                <SelectItem key={s._id} value={s.name}>{STATUS_LABELS[s.name] ?? capitalize(s.name)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={filters.category} onValueChange={set("category")}>
-          <SelectTrigger className={SELECT_CLASS}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todas">Todas las categorías</SelectItem>
-            {categories.map((cat) => (
-              <SelectItem key={cat._id} value={cat.name}>{capitalize(cat.name)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Select value={filters.category} onValueChange={set("category")}>
+            <SelectTrigger className={SELECT_CLASS}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas las categorías</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat._id} value={cat.name}>{capitalize(cat.name)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={filters.priority} onValueChange={set("priority")}>
-          <SelectTrigger className={SELECT_CLASS}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todas">Todas las prioridades</SelectItem>
-            {Array.from({ length: 10 }, (_, i) => i + 1).map((p) => (
-              <SelectItem key={p} value={String(p)}>{p} — {getPriorityLabel(p)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Select value={filters.priority} onValueChange={set("priority")}>
+            <SelectTrigger className={SELECT_CLASS}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas las prioridades</SelectItem>
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((p) => (
+                <SelectItem key={p} value={String(p)}>{p} — {getPriorityLabel(p)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <div className="flex items-center gap-3 shrink-0 ml-auto">
-          {hasActiveFilters && (
+          {hasActiveFilters ? (
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1 px-3 py-2 rounded-xl bg-gray-100 text-gray-500 text-xs font-medium hover:bg-gray-200 transition-colors"
+              className="flex items-center justify-center gap-1 px-3 py-2 rounded-xl bg-gray-100 text-gray-500 text-xs font-medium hover:bg-gray-200 transition-colors"
             >
               <X size={12} />
               Limpiar
             </button>
+          ) : (
+            <div className="sm:hidden" />
           )}
         </div>
+
       </div>
 
       <AdminIncidentList
