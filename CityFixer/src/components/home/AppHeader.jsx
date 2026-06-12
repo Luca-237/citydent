@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { LogOut, Siren, ShieldOff, User, Home as HomeIcon, FileText, HelpCircle, Mail, Phone, MessageCircle, Clock, Bell, CheckCheck } from "lucide-react";
+import { LogOut, Siren, ShieldOff, User, Home as HomeIcon, FileText, HelpCircle, Mail, Phone, MessageCircle, Clock, Bell, CheckCheck, ArrowRight } from "lucide-react";
+import { STATUS_LABELS_PUBLIC } from "@/lib/incidents";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -29,6 +30,13 @@ function relativeTime(dateStr) {
   if (mins < 60) return `hace ${mins} min`;
   if (hours < 24) return `hace ${hours} h`;
   return `hace ${days} d`;
+}
+
+// Extrae el nombre del estado del mensaje y lo traduce
+function extractStatusLabel(message) {
+  const match = /"([^"]+)"/.exec(message);
+  const raw = match?.[1];
+  return STATUS_LABELS_PUBLIC[raw] ?? raw ?? "actualizado";
 }
 
 // ── Panel de notificaciones ───────────────────────────────────────────────────
@@ -63,24 +71,46 @@ function NotificationPanel({ onNavigate }) {
             <p className="text-xs text-slate-400 mt-0.5">Te avisaremos cuando haya novedades.</p>
           </div>
         ) : (
-          notifications.map((noti) => (
-            <button
-              key={noti._id}
-              onClick={() => onNavigate(noti)}
-              className={`w-full text-left px-4 py-3 border-b border-slate-100 last:border-0 transition-colors flex items-start gap-3 ${
-                !noti.isRead ? "bg-blue-50 hover:bg-blue-100/70" : "hover:bg-slate-50"
-              }`}
-            >
-              {/* Indicador no leída */}
-              <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${!noti.isRead ? "bg-blue-500" : "bg-slate-200"}`} />
-              <div className="flex-1 min-w-0">
-                <p className={`text-xs leading-snug ${!noti.isRead ? "font-semibold text-slate-900" : "font-normal text-slate-500"}`}>
-                  {noti.message}
-                </p>
-                <p className="text-[11px] text-slate-400 mt-0.5">{relativeTime(noti.createdAt)}</p>
-              </div>
-            </button>
-          ))
+          notifications.map((noti) => {
+            const statusLabel = extractStatusLabel(noti.message);
+            return (
+              <button
+                key={noti._id}
+                onClick={() => onNavigate(noti)}
+                className={`w-full text-left px-4 py-3 border-b border-slate-100 last:border-0 transition-colors flex items-start gap-3 ${
+                  !noti.isRead ? "bg-primary/[0.04] hover:bg-primary/[0.07]" : "hover:bg-slate-50"
+                }`}
+              >
+                {/* Indicador no leída */}
+                <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${!noti.isRead ? "bg-primary" : "bg-slate-200"}`} />
+
+                <div className="flex-1 min-w-0">
+                  {/* Título del incidente */}
+                  {noti.incidentTitle ? (
+                    <p className={`text-xs truncate mb-0.5 ${!noti.isRead ? "font-semibold text-slate-800" : "font-medium text-slate-600"}`}>
+                      {noti.incidentTitle}
+                    </p>
+                  ) : (
+                    <p className={`text-xs mb-0.5 ${!noti.isRead ? "font-semibold text-slate-800" : "font-medium text-slate-600"}`}>
+                      Tu incidente
+                    </p>
+                  )}
+
+                  {/* Estado legible */}
+                  <p className="text-[11px] text-slate-400 flex items-center gap-1">
+                    Pasó a
+                    <span className={`font-semibold ${!noti.isRead ? "text-primary" : "text-slate-500"}`}>
+                      {statusLabel}
+                    </span>
+                  </p>
+
+                  <p className="text-[10px] text-slate-300 mt-1">{relativeTime(noti.createdAt)}</p>
+                </div>
+
+                <ArrowRight size={12} className="text-slate-300 mt-1 shrink-0" />
+              </button>
+            );
+          })
         )}
       </div>
     </div>

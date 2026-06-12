@@ -303,12 +303,12 @@ const updateGroupStatus = async (groupId, newStatusId, userId) => {
   // Notificar a cada usuario con su propio incidente
   const affectedIncidents = await Incident.find(
     { _id: { $in: group.incidents }, is_cancelled: { $ne: true } },
-    { user: 1 }
+    { user: 1, title: 1 }
   );
 
   const recipients = affectedIncidents
     .filter(i => i.user)
-    .map(i => ({ userId: i.user, incidentId: i._id }));
+    .map(i => ({ userId: i.user, incidentId: i._id, incidentTitle: i.title }));
 
   if (recipients.length) {
     await createNotifications(recipients, {
