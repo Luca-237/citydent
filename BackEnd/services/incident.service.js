@@ -256,6 +256,12 @@ const getGroupHistory = async (groupId) => {
 
 const FINAL_STATUSES = ['rechazado', 'resuelto', 'cancelado'];
 
+const VALID_TRANSITIONS = {
+  pendiente:  ['aceptado', 'rechazado'],
+  aceptado:   ['en_proceso', 'rechazado'],
+  en_proceso: ['resuelto', 'rechazado'],
+};
+
 const updateGroupStatus = async (groupId, newStatusId, userId) => {
   if (!mongoose.Types.ObjectId.isValid(newStatusId)) {
     const error = new Error('El estado enviado no es válido.');
@@ -280,6 +286,20 @@ const updateGroupStatus = async (groupId, newStatusId, userId) => {
     Incident.exists({ _id: { $in: group.incidents }, is_dubious: true, is_cancelled: { $ne: true } }),
     Status.findById(newStatusId)
   ]);
+
+  if (!newStatus) {
+    const error = new Error('El estado enviado no existe.');
+    error.status = 400;
+    throw error;
+  }
+
+  const currentStatusName = group.status?.name;
+  const allowedTransitions = VALID_TRANSITIONS[currentStatusName];
+  if (!allowedTransitions || !allowedTransitions.includes(newStatus?.name)) {
+    const error = new Error(`No se puede pasar de "${currentStatusName}" a "${newStatus?.name}".`);
+    error.status = 409;
+    throw error;
+  }
 
   if (hasDubious && !['aceptado', 'rechazado'].includes(newStatus?.name)) {
     const error = new Error('Un grupo con incidente dudoso solo puede cambiar a "aceptado" o "rechazado".');
