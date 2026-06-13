@@ -115,7 +115,16 @@ const createIncident = async (incidentData, userId, aiData, userRole = 'user') =
   if (puedeAgruparse) {
     const grupoExistente = await IncidentGroup.findById(aiData.idGrupoCandidato);
 
-    if (grupoExistente) {
+    // Un grupo con un dudoso sin revisar debe quedar AISLADO hasta que un admin lo resuelva.
+    // Si acumulara reportes nuevos, al aceptar el dudoso (resolveDubious) se cancelaría el grupo
+    // y esos reportes quedarían huérfanos. En ese caso el nuevo incidente arma su propio grupo.
+    const tieneDudosoSinRevisar = grupoExistente && await Incident.exists({
+      _id: { $in: grupoExistente.incidents },
+      is_dubious: true,
+      is_cancelled: { $ne: true }
+    });
+
+    if (grupoExistente && !tieneDudosoSinRevisar) {
       newIncident.group = grupoExistente._id;
       const savedIncident = await newIncident.save();
 
