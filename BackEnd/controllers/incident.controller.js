@@ -80,6 +80,7 @@ const updateStatus = async (req, res) => {
   } catch (error) {
     if (error.status === 400) return res.status(400).json({ error: error.message });
     if (error.status === 404) return res.status(404).json({ error: error.message });
+    if (error.status === 409) return res.status(409).json({ error: error.message });
     res.status(500).json({ error: 'Error interno del servidor.' });
   }
 };
@@ -93,6 +94,7 @@ const updateCategory = async (req, res) => {
   } catch (error) {
     if (error.status === 400) return res.status(400).json({ error: error.message });
     if (error.status === 404) return res.status(404).json({ error: error.message });
+    if (error.status === 409) return res.status(409).json({ error: error.message });
     res.status(500).json({ error: 'Error interno del servidor.' });
   }
 };
@@ -106,6 +108,7 @@ const updatePriority = async (req, res) => {
   } catch (error) {
     if (error.status === 400) return res.status(400).json({ error: error.message });
     if (error.status === 404) return res.status(404).json({ error: error.message });
+    if (error.status === 409) return res.status(409).json({ error: error.message });
     res.status(500).json({ error: 'Error interno del servidor.' });
   }
 };
