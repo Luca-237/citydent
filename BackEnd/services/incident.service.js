@@ -40,7 +40,7 @@ const validateIncidentData = (data) => {
     errors.push('Se requiere entre 1 y 3 fotos.');
   }
 
-  if (!data.location?.lat || !data.location?.lng) {
+  if (!Number.isFinite(data.location?.lat) || !Number.isFinite(data.location?.lng)) {
     errors.push('La ubicación es obligatoria.');
   }
 
