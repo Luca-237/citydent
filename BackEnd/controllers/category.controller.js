@@ -1,4 +1,5 @@
 const { getAllCategories, createCategory, updateCategory, toggleCategory } = require('../services/category.service');
+const { respondError } = require('../utils/logger');
 
 const getAll = async (req, res) => {
   try {
@@ -6,8 +7,7 @@ const getAll = async (req, res) => {
     const categories = await getAllCategories(filter);
     res.status(200).json({ success: true, categories });
   } catch (error) {
-    console.error('Error en getAll categories:', error);
-    res.status(500).json({ error: 'Error interno del servidor.' });
+    respondError(res, error, { context: 'categories.getAll', inputs: { filter: req.filter } });
   }
 };
 
@@ -17,10 +17,7 @@ const create = async (req, res) => {
     const category = await createCategory({ name, description });
     res.status(201).json({ success: true, category });
   } catch (error) {
-    if (error.status === 400) {
-      return res.status(400).json({ error: error.message });
-    }
-    res.status(500).json({ error: 'Error interno del servidor.' });
+    respondError(res, error, { context: 'categories.create', inputs: { name: req.body.name, description: req.body.description } });
   }
 };
 
@@ -30,13 +27,7 @@ const toggle = async (req, res) => {
     const category = await toggleCategory(id);
     res.status(200).json({ success: true, category });
   } catch (error) {
-    if (error.status === 400) {
-      return res.status(400).json({ error: error.message });
-    }
-    if (error.status === 404) {
-      return res.status(404).json({ error: error.message });
-    }
-    res.status(500).json({ error: 'Error interno del servidor.' });
+    respondError(res, error, { context: 'categories.toggle', inputs: { categoryId: req.params.id } });
   }
 };
 
@@ -47,9 +38,7 @@ const update = async (req, res) => {
     const category = await updateCategory(id, { name, description, isActive });
     res.status(200).json({ success: true, category });
   } catch (error) {
-    if (error.status === 400) return res.status(400).json({ error: error.message });
-    if (error.status === 404) return res.status(404).json({ error: error.message });
-    res.status(500).json({ error: 'Error interno del servidor.' });
+    respondError(res, error, { context: 'categories.update', inputs: { categoryId: req.params.id, body: req.body } });
   }
 };
 
