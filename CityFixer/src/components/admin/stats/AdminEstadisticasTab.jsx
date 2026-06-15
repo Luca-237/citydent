@@ -4,14 +4,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { STATUS_KEYS, STATUS_LABELS, capitalize, getStatusStyle } from "@/lib/incidents";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-  PieChart, Pie, Legend,
 } from "recharts";
 import AdminHeatmapView from "./AdminHeatmapView";
 import { requestPowerBiOtp } from "@/services/api";
-import { Zap, Loader2, CheckCircle2, Siren, ChevronRight, Users, Clock, Activity } from "lucide-react";
+import { Zap, Loader2, CheckCircle2, Siren, ChevronRight, Users, FileText, AlertTriangle, Activity } from "lucide-react";
 
-const BRAND_COLORS = ["#5C3F99", "#7C5CBF", "#9B7DD4", "#6B4FA8", "#4C3080", "#A889CC", "#C4B8E0", "#8B6FC0"];
-const FINAL        = new Set([STATUS_KEYS.RESOLVED, STATUS_KEYS.REJECTED, STATUS_KEYS.CANCELLED]);
+const FINAL = new Set([STATUS_KEYS.RESOLVED, STATUS_KEYS.REJECTED, STATUS_KEYS.CANCELLED]);
 const COOLDOWN_MS  = 5 * 60 * 1000;
 
 // ── Tooltips ──────────────────────────────────────────────────────────────────
@@ -25,12 +23,12 @@ function BarTooltip({ active, payload, label }) {
   );
 }
 
-function PieTooltip({ active, payload }) {
+function CategoryTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white border border-slate-100 rounded-xl px-3 py-2 shadow-md text-xs">
-      <p className="font-semibold text-slate-900">{payload[0].name}</p>
-      <p className="text-slate-500">{payload[0].value} grupo{payload[0].value !== 1 ? "s" : ""}</p>
+      <p className="text-slate-500 mb-0.5">{label}</p>
+      <p className="font-bold text-slate-900">{payload[0].value} grupo{payload[0].value !== 1 ? "s" : ""}</p>
     </div>
   );
 }
@@ -108,43 +106,29 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole }) {
     ? `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`
     : null;
 
-  // ── KPI: reportes ciudadanos (suma de incidents.length de cada grupo) ──────
-  const totalReportesCiudadanos = useMemo(
-    () => incidents.reduce((s, g) => s + (g.incidents?.length ?? 1), 0),
+  // ── KPI: reportes activos (suma de incidents.length en grupos no finalizados) ──
+  const reportesActivos = useMemo(
+    () => incidents
+      .filter(g => !g.isArchived && !FINAL.has(g.status?.name))
+      .reduce((s, g) => s + (g.incidents?.length ?? 1), 0),
+    [incidents],
+  );
+
+  // ── KPI: incidentes críticos (grupos activos con prioridad 7-10) ──────────
+  const incidentesCriticos = useMemo(
+    () => incidents.filter(g => !g.isArchived && !FINAL.has(g.status?.name) && g.priority >= 7).length,
+    [incidents],
+  );
+
+  // ── KPI: emergencias activas ──────────────────────────────────────────────
+  const emergenciasActivas = useMemo(
+    () => incidents.filter(g => g.is_emergency && !FINAL.has(g.status?.name)).length,
     [incidents],
   );
 
   // ── KPI: grupos activos (no archivados, no finalizados) ───────────────────
   const gruposActivos = useMemo(
     () => incidents.filter(g => !g.isArchived && !FINAL.has(g.status?.name)).length,
-    [incidents],
-  );
-
-  // ── KPI: tiempo promedio de resolución (usa statusHistory para exactitud) ──
-  const tiempoPromedioResolucion = useMemo(() => {
-    const resueltos = incidents.filter(g => g.status?.name === STATUS_KEYS.RESOLVED);
-    if (!resueltos.length) return null;
-    let totalMs = 0, count = 0;
-    for (const g of resueltos) {
-      const entry = [...(g.statusHistory ?? [])].reverse()
-        .find(h => h.status?.name === STATUS_KEYS.RESOLVED);
-      const resolvedAt = entry
-        ? new Date(entry.changedAt)
-        : g.finalizedAt ? new Date(g.finalizedAt) : null;
-      if (!resolvedAt) continue;
-      totalMs += resolvedAt.getTime() - new Date(g.createdAt).getTime();
-      count++;
-    }
-    if (!count) return null;
-    const avgDays = totalMs / count / 86400000;
-    return avgDays < 1
-      ? `${Math.round(avgDays * 24)}h`
-      : `${avgDays.toFixed(1)}d`;
-  }, [incidents]);
-
-  // ── KPI: emergencias activas ──────────────────────────────────────────────
-  const emergenciasActivas = useMemo(
-    () => incidents.filter(g => g.is_emergency && !FINAL.has(g.status?.name)).length,
     [incidents],
   );
 
@@ -210,8 +194,7 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole }) {
     }, {});
     return Object.entries(map)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 7)
-      .map(([name, value], i) => ({ name, value, fill: BRAND_COLORS[i % BRAND_COLORS.length] }));
+      .map(([name, value]) => ({ name, value }));
   }, [incidents]);
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -243,27 +226,19 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole }) {
           {/* ── KPIs ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-start">
             <KpiCard
-              label="Reportes ciudadanos"
-              value={totalReportesCiudadanos}
+              label="Reportes activos"
+              value={reportesActivos}
               accent="text-slate-900"
-              icon={Users}
-              sub={`en ${incidents.length} grupos`}
+              icon={FileText}
+              sub="en grupos no finalizados"
               loading={loading}
             />
             <KpiCard
-              label="Grupos activos"
-              value={gruposActivos}
-              accent="text-primary"
-              icon={Activity}
-              sub="sin resolver ni archivar"
-              loading={loading}
-            />
-            <KpiCard
-              label="Tiempo prom. resolución"
-              value={tiempoPromedioResolucion}
-              accent="text-celestito"
-              icon={Clock}
-              sub={`sobre ${incidents.filter(g => g.status?.name === STATUS_KEYS.RESOLVED).length} resueltos`}
+              label="Incidentes críticos"
+              value={incidentesCriticos}
+              accent={incidentesCriticos > 0 ? "text-orange-600" : "text-slate-900"}
+              icon={AlertTriangle}
+              sub="prioridad alta o crítica"
               loading={loading}
             />
             <KpiCard
@@ -272,6 +247,14 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole }) {
               accent={emergenciasActivas > 0 ? "text-red-600" : "text-emerald-600"}
               icon={Siren}
               sub={emergenciasActivas > 0 ? "requieren atención" : "sin emergencias activas"}
+              loading={loading}
+            />
+            <KpiCard
+              label="Grupos activos"
+              value={gruposActivos}
+              accent="text-primary"
+              icon={Activity}
+              sub="sin resolver ni archivar"
               loading={loading}
             />
           </div>
@@ -421,31 +404,38 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole }) {
                 <p className="text-sm font-semibold text-slate-900">Distribución por categoría</p>
                 <p className="text-xs text-slate-400 mt-0.5">Tipos de problemas más frecuentes</p>
               </div>
-              <div className="h-64">
+              <div style={{ height: loading || categoryData.length === 0 ? 256 : Math.max(220, categoryData.length * 40) }}>
                 {loading || categoryData.length === 0 ? (
                   <div className="h-full flex items-center justify-center">
                     <p className="text-xs text-slate-400">{loading ? "Cargando..." : "Sin datos suficientes"}</p>
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={categoryData}
-                        cx="50%"
-                        cy="42%"
-                        innerRadius={60}
-                        outerRadius={95}
-                        paddingAngle={3}
-                        dataKey="value"
+                    <BarChart
+                      data={categoryData}
+                      layout="vertical"
+                      barSize={16}
+                      margin={{ top: 2, right: 16, left: 4, bottom: 2 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                      <XAxis
+                        type="number"
+                        allowDecimals={false}
+                        tick={{ fontSize: 11, fill: "#94a3b8" }}
+                        axisLine={false}
+                        tickLine={false}
                       />
-                      <Tooltip content={<PieTooltip />} />
-                      <Legend
-                        iconType="circle"
-                        iconSize={8}
-                        formatter={(value) => <span style={{ fontSize: 11, color: "#64748b" }}>{value}</span>}
-                        wrapperStyle={{ paddingTop: 12 }}
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        width={130}
+                        tick={{ fontSize: 11, fill: "#64748b" }}
+                        axisLine={false}
+                        tickLine={false}
                       />
-                    </PieChart>
+                      <Tooltip content={<CategoryTooltip />} cursor={{ fill: "#f8fafc" }} />
+                      <Bar dataKey="value" fill="var(--color-primary)" radius={[0, 6, 6, 0]} />
+                    </BarChart>
                   </ResponsiveContainer>
                 )}
               </div>
