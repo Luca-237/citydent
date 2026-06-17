@@ -1,15 +1,21 @@
 const nodemailer = require('nodemailer');
 
+const mailPort = Number(process.env.MAIL_PORT) || 465; 
+const isSecure = mailPort === 465; // true para 465, false para 587
+
 const transporter = nodemailer.createTransport({
   host: process.env.MAIL_HOST,
-  port: Number(process.env.MAIL_PORT) || 587,
-  secure: false,
+  port: mailPort,
+  secure: isSecure, 
   auth: {
     user: process.env.MAIL_USER,
     pass: process.env.MAIL_PASS
+  },
+  tls: {
+    // Evita bloqueos en la nube si hay ligeras discrepancias de IPv6 o certificados
+    rejectUnauthorized: false
   }
 });
-
 const sendVerificationEmail = async (to, code) => {
   await transporter.sendMail({
     from: `"CityFixer" <${process.env.MAIL_FROM || process.env.MAIL_USER}>`,
