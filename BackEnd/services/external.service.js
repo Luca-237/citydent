@@ -14,6 +14,14 @@ const OTP_TTL_HOURS = 24;
 // SOLICITUD DE OTP (superAdmin)
 // ==========================================
 
+/**
+ * Genera un OTP (válido 24 h) para el consumo externo de datos y lo envía por
+ * email al superAdmin. Invalida los OTP previos no usados del mismo usuario.
+ *
+ * @param {string} userId    ObjectId del superAdmin solicitante.
+ * @param {string} userEmail Email donde enviar el código.
+ * @returns {Promise<void>}
+ */
 const requestExternalOtp = async (userId, userEmail) => {
   await ExternalOtp.deleteMany({ userId, used: false });
 
@@ -28,6 +36,13 @@ const requestExternalOtp = async (userId, userEmail) => {
 // VALIDACIÓN DE OTP (Power BI)
 // ==========================================
 
+/**
+ * Valida un OTP de consumo externo (debe existir, no estar usado y no haber expirado).
+ *
+ * @param {string} code Código OTP recibido.
+ * @returns {Promise<void>}
+ * @throws {Error} 401 si el código es inválido o expiró.
+ */
 const validateExternalOtp = async (code) => {
   const otp = await ExternalOtp.findOne({ code, used: false });
 
@@ -42,6 +57,12 @@ const validateExternalOtp = async (code) => {
 // BUILDERS — uno por tabla (una request por tabla)
 // ==========================================
 
+// Builders de tablas para Power BI: cada uno aplana un modelo a filas planas.
+
+/**
+ * Tabla de grupos de incidentes aplanada (incluye coordenadas del representante).
+ * @returns {Promise<Array<Object>>} Filas de grupos.
+ */
 const getGroups = async () => {
   const groups = await IncidentGroup.find()
     .populate('status', 'name')
@@ -63,6 +84,10 @@ const getGroups = async () => {
   }));
 };
 
+/**
+ * Tabla de incidentes individuales aplanada (con datos del usuario reportante).
+ * @returns {Promise<Array<Object>>} Filas de incidentes.
+ */
 const getIncidents = async () => {
   const incidents = await Incident.find()
     .populate('status', 'name')
@@ -87,6 +112,10 @@ const getIncidents = async () => {
   }));
 };
 
+/**
+ * Tabla de estados aplanada.
+ * @returns {Promise<Array<Object>>} Filas de estados.
+ */
 const getStatuses = async () => {
   const statuses = await Status.find().sort({ name: 1 });
   return statuses.map(s => ({
@@ -96,6 +125,10 @@ const getStatuses = async () => {
   }));
 };
 
+/**
+ * Tabla de categorías aplanada.
+ * @returns {Promise<Array<Object>>} Filas de categorías.
+ */
 const getCategories = async () => {
   const categories = await Category.find().sort({ name: 1 });
   return categories.map(c => ({
@@ -105,6 +138,10 @@ const getCategories = async () => {
   }));
 };
 
+/**
+ * Tabla de usuarios aplanada (excluye el usuario de sistema de la IA).
+ * @returns {Promise<Array<Object>>} Filas de usuarios.
+ */
 const getUsers = async () => {
   const aiRole = await Role.findOne({ name: 'ai' });
   const users = await User.find({ role: { $ne: aiRole?._id } })
@@ -143,6 +180,14 @@ const TABLES = {
 
 const AVAILABLE_TABLES = Object.keys(TABLES);
 
+/**
+ * Devuelve una tabla de datos para consumo externo, validando contra la lista
+ * blanca de tablas (`AVAILABLE_TABLES`).
+ *
+ * @param {('groups'|'incidents'|'statuses'|'categories'|'users')} table Nombre de la tabla.
+ * @returns {Promise<Array<Object>>} Filas de la tabla solicitada.
+ * @throws {Error} 400 si la tabla no es válida.
+ */
 const getExternalTable = async (table) => {
   const builder = TABLES[table];
   if (!builder) {

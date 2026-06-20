@@ -1,5 +1,14 @@
-// Eliminamos Nodemailer por completo y usamos la API HTTP nativa
+// Envío de correos vía la API HTTP de Brevo (sin Nodemailer).
 
+/**
+ * Envía el email con el código de verificación para completar el registro
+ * (válido 10 minutos).
+ *
+ * @param {string} to   Email del destinatario.
+ * @param {string} code Código de verificación de 6 dígitos.
+ * @returns {Promise<void>}
+ * @throws {Error} Si la API de Brevo responde con un error.
+ */
 const sendVerificationEmail = async (to, code) => {
   const payload = {
     sender: { name: "CityFixer", email: process.env.MAIL_USER }, // Asegúrate de que MAIL_USER sea el correo verificado en Brevo
@@ -33,6 +42,15 @@ const sendVerificationEmail = async (to, code) => {
   }
 };
 
+/**
+ * Envía el email con el OTP de acceso a datos externos (Power BI). El código se
+ * ingresa en el header `x-otp-code` y es válido 24 horas.
+ *
+ * @param {string} to   Email del destinatario (superAdmin).
+ * @param {string} code Código OTP de 6 dígitos.
+ * @returns {Promise<void>}
+ * @throws {Error} Si la API de Brevo responde con un error.
+ */
 const sendExternalOtpEmail = async (to, code) => {
   const payload = {
     sender: { name: "CityFixer", email: process.env.MAIL_USER },
