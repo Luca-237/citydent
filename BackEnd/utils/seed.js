@@ -1,0 +1,110 @@
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../config/.env') });
+const mongoose = require('mongoose');
+const mongoConnect = require('../config/mongoConnet');
+const Status = require('../models/status');
+const Category = require('../models/category');
+const Neighborhood = require('../models/neighborhood');
+const User = require('../models/user');
+const Role = require('../models/role');
+const fs = require('fs');
+const barrios = JSON.parse(fs.readFileSync(`${__dirname}/barrios.geojson`, 'utf-8'));
+
+const statuses = [
+  { name: 'pendiente',   description: 'El incidente fue reportado y está esperando revisión.' },
+  { name: 'aceptado',    description: 'El incidente fue aceptado y será atendido.' },
+  { name: 'en_proceso',  description: 'El incidente está siendo atendido.' },
+  { name: 'resuelto',    description: 'El incidente fue resuelto.' },
+  { name: 'rechazado',   description: 'El incidente fue rechazado.' },
+  { name: 'cancelado',   description: 'El incidente fue cancelado por el usuario.' }
+];
+
+const categories = [
+  { name: 'bache',       description: 'Problemas en el pavimento.' },
+  { name: 'alumbrado',   description: 'Problemas con el alumbrado público.' },
+  { name: 'basura',      description: 'Acumulación de residuos en la vía pública.' },
+  { name: 'vandalismo',  description: 'Daños al mobiliario urbano.' },
+  { name: 'otro',        description: 'Otros tipos de incidentes.' }
+];
+
+const roles = [
+  { name: 'user',       description: 'Usuario estándar de la plataforma.' },
+  { name: 'admin',      description: 'Administrador con acceso a gestión de incidentes.' },
+  { name: 'superAdmin', description: 'Administrador con acceso total a la plataforma.' },
+  { name: 'ai',         description: 'Usuario sistema utilizado por el modelo de inteligencia artificial.' }
+];
+
+const seed = async () => {
+  try {
+    await mongoConnect();
+    console.log('Conectado a la DB');
+
+    for (const status of statuses) {
+      await Status.findOneAndUpdate(
+        { name: status.name },
+        status,
+        { upsert: true, returnDocument: 'after' }
+      );
+      console.log(`✔ Estado: ${status.name}`);
+    }
+
+    for (const category of categories) {
+      await Category.findOneAndUpdate(
+        { name: category.name },
+        category,
+        { upsert: true, returnDocument: 'after' }
+      );
+      console.log(`✔ Categoría: ${category.name}`);
+    }
+
+    // Roles
+    for (const role of roles) {
+      await Role.findOneAndUpdate(
+        { name: role.name },
+        role,
+        { upsert: true, returnDocument: 'after' }
+      );
+      console.log(`✔ Rol: ${role.name}`);
+    }
+
+    // Usuario sistema para la IA
+    const aiRole = await Role.findOne({ name: 'ai' });
+    const aiUser = await User.findOneAndUpdate(
+      { clerkId: 'ai_system' },
+      {
+        clerkId: 'ai_system',
+        email: 'ai@system.com',
+        firstName: 'AI',
+        lastName: 'Bot',
+        dni: '00000000',
+        role: aiRole._id,
+        isBanned: false
+      },
+      { upsert: true, returnDocument: 'after' }
+    );
+    console.log(`✔ Usuario IA: ${aiUser._id}`);
+
+    // Barrios al final: si alguno fallara (geometría inválida para el índice 2dsphere),
+    // los datos críticos de arriba (estados, categorías, roles, usuario IA) ya quedaron cargados.
+    for (const feature of barrios.features) {
+      await Neighborhood.findOneAndUpdate(
+        { name: feature.properties.nombre },
+        {
+          name: feature.properties.nombre,
+          geometry: feature.geometry
+        },
+        { upsert: true, returnDocument: 'after' }
+      );
+      console.log(`✔ Barrio: ${feature.properties.nombre}`);
+    }
+
+    console.log('Seed completado.');
+  } catch (error) {
+    console.error('Error en el seed:', error);
+  } finally {
+    await mongoose.disconnect();
+    console.log('Desconectado de la DB');
+  }
+};
+
+seed();
