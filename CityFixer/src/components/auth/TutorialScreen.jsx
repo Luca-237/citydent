@@ -79,13 +79,15 @@ export default function TutorialScreen({ onFinish }) {
   };
 
   return (
-    <div className="min-h-screen bg-azul-oscuro flex flex-col items-center justify-center px-6 py-10">
+    // CAMBIO CLAVE 1: bg-azul-oscuro reemplazado por bg-brand-dark
+    <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center px-6 py-10">
       <div className="w-full max-w-sm flex flex-col gap-8">
 
-        {/* Branding, igual que ProfileSetupScreen */}
+        {/* Branding */}
         <div className="flex flex-col items-center gap-2">
           <div className="flex items-center gap-2.5">
-            <span className="bg-blanquito w-1.5 h-8 rounded-full inline-block" />
+            {/* CAMBIO CLAVE 2: bg-blanquito reemplazado por bg-brand-light */}
+            <span className="bg-brand-light w-1.5 h-8 rounded-full inline-block" />
             <h1 className="text-white text-2xl font-bold tracking-tight">CityFixer</h1>
           </div>
           <p className="text-white/50 text-xs text-center">Tu ciudad, tu voz</p>
@@ -117,7 +119,8 @@ export default function TutorialScreen({ onFinish }) {
             )}
 
             <div className="flex flex-col gap-1.5">
-              <h2 className="text-azul-oscuro font-bold text-lg">{slide.title}</h2>
+              {/* CAMBIO CLAVE 3: text-azul-oscuro reemplazado por text-brand-dark */}
+              <h2 className="text-brand-dark font-bold text-lg">{slide.title}</h2>
               <p className="text-gray-500 text-sm leading-relaxed">{slide.text}</p>
             </div>
           </div>
@@ -136,7 +139,8 @@ export default function TutorialScreen({ onFinish }) {
             <button
               type="button"
               onClick={handleNext}
-              className="flex items-center justify-center gap-2 flex-1 py-3 rounded-2xl bg-azul-oscuro text-white text-sm font-semibold hover:bg-azul transition-colors"
+              // CAMBIO CLAVE 4: bg-azul-oscuro reemplazado por bg-brand-dark, hover:bg-azul reemplazado por hover:bg-brand
+              className="flex items-center justify-center gap-2 flex-1 py-3 rounded-2xl bg-brand-dark text-white text-sm font-semibold hover:bg-brand transition-colors"
             >
               {isLast ? "¡Empezar!" : "Siguiente"}
             </button>
