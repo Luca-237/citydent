@@ -1,3 +1,16 @@
+// Mapa de calor interactivo de incidentes (vista del panel admin).
+// Muestra todos los incidentes (excepto rechazados y dudosos) como un heatmap de colores
+// sobre el mapa de Mapbox. Al hacer clic en una zona, aparece un panel lateral con
+// el resumen del grupo de incidentes y botones para navegar a él en la lista.
+//
+// La intensidad del calor depende de la prioridad del incidente (a mayor prioridad, más peso).
+//
+// Props:
+//   incidents       → array de incidentes con coordenadas (lat/lng en location)
+//   onTabChange     → función que recibe un tab id, para navegar al tab de incidentes
+//   onFocusIncident → función que recibe un id de incidente, para abrirlo desde la lista
+//
+// Se usa en AdminEstadisticasTab.jsx dentro de la pestaña "Mapa de Calor".
 import { useMemo, useState, useCallback } from "react";
 import Map from "react-map-gl";
 import HeatmapLayer from "./HeatmapLayer";

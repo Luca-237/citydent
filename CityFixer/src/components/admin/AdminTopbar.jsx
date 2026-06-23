@@ -1,22 +1,25 @@
+// Barra superior del panel admin.
+// Contiene: botón de menú mobile (hamburguesa), barra de búsqueda global (por título
+// de incidente), campana de notificaciones con dropdown que muestra hasta 5 emergencias activas,
+// y el avatar del usuario.
+// Las notificaciones se obtienen del contexto global (NotificationContext).
+// Al hacer clic en una emergencia del dropdown, llama a onIncidentSelect para que
+// AdminDashboard abra ese incidente directamente.
+//
+// Props:
+//   onMenuToggle    → función sin argumentos, abre/cierra el sidebar en mobile
+//   onIncidentSelect → función que recibe un id de incidente para enfocarlo en la lista
+//
+// Se usa en AdminDashboard.jsx en la parte superior de la pantalla.
 import { useState, useRef, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { Bell, Menu, Search, User, X, AlertTriangle } from "lucide-react";
-import { STATUS_LABELS, capitalize } from "@/lib/incidents";
+import { STATUS_LABELS, STATUS_BADGE, capitalize } from "@/lib/incidents";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const STATUS_BADGE = {
-  pendiente:  "bg-amber-50 text-amber-700 border-amber-200",
-  dudoso:     "bg-orange-50 text-orange-700 border-orange-200",
-  aceptado:   "bg-teal-50 text-teal-700 border-teal-200",
-  en_proceso: "bg-blanquito/20 text-azul-oscuro border-blanquito/50",
-  resuelto:   "bg-emerald-50 text-emerald-700 border-emerald-200",
-  rechazado:  "bg-rose-50 text-rose-700 border-rose-200",
-  cancelado:  "bg-gray-50 text-gray-500 border-gray-200",
-};
 
 const MAX_VISIBLE = 5;
 
@@ -323,15 +326,15 @@ export default function AdminTopbar({
               className="w-8 h-8 rounded-full object-cover ring-2 ring-gray-100"
             />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-azul flex items-center justify-center ring-2 ring-blanquito/30">
-              <User size={15} className="text-blanquito" />
+            <div className="w-8 h-8 rounded-full bg-brand flex items-center justify-center ring-2 ring-brand-light/30">
+              <User size={15} className="text-brand-light" />
             </div>
           )}
           <div className="hidden sm:block leading-tight">
             <p className="text-sm font-semibold text-gray-800">
               {user?.fullName ?? "Administrador"}
             </p>
-            <p className="text-xs text-celestito font-medium">{roleLabel}</p>
+            <p className="text-xs text-brand-mid font-medium">{roleLabel}</p>
           </div>
         </div>
 

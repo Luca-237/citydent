@@ -1,3 +1,12 @@
+// Capa de mapa de calor de Mapbox GL, renderizada dentro de un mapa de react-map-gl.
+// Convierte el array de incidentes en un GeoJSON de puntos y los pinta con un gradiente
+// de colores que va de violeta (baja densidad) a rojo (alta densidad).
+// La opacidad se desvanece a medida que se hace zoom para evitar tapar los marcadores.
+//
+// Props:
+//   incidents → array de incidentes con location.lat y location.lng
+//
+// Se usa dentro de AdminHeatmapView.jsx como layer del mapa Mapbox.
 import { useMemo } from "react";
 import { Source, Layer } from "react-map-gl";
 
