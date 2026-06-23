@@ -18,10 +18,11 @@ import axios from "axios";
 //   console.log(data.incidents); // array de incidentes
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  // 👇 MODIFICACIÓN CLAVE: Si ya está compilado en producción (Vercel) usa "" (ruta relativa), 
+  // si estás en tu PC local sigue usando el localhost de tu variable de entorno.
+  baseURL: import.meta.env.PROD ? "" : import.meta.env.VITE_API_URL,
   withCredentials: true,
 });
-
 // Interceptor global de errores.
 // Si el backend responde 403 con el mensaje de cuenta suspendida, dispara el
 // evento "cityfixer:banned" que escucha App.jsx para mostrar el aviso y cerrar sesión.
