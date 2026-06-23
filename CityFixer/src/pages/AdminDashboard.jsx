@@ -71,7 +71,13 @@ export default function AdminDashboard({ dbRole }) {
 
             {/* Visible para admin y superAdmin */}
             {activeTab === "estadisticas" && (
-              <AdminEstadisticasTab incidents={groups} loading={loading} dbRole={dbRole} />
+              <AdminEstadisticasTab
+                incidents={groups}
+                loading={loading}
+                dbRole={dbRole}
+                onTabChange={setActiveTab}
+                onFocusIncident={setFocusedIncidentId}
+              />
             )}
 
             {/* EXCLUSIVO SUPERADMIN */}

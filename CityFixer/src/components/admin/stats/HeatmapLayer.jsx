@@ -17,7 +17,30 @@ const heatmapLayerStyle = {
       1.0,  "#dc2626",
     ],
     "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 15, 18, 35],
-    "heatmap-opacity": 0.85,
+    "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 12, 0.85, 14.5, 0],
+  },
+};
+
+const circleLayerStyle = {
+  id: "incidents-circles",
+  type: "circle",
+  minzoom: 12,
+  paint: {
+    "circle-radius": [
+      "interpolate", ["linear"], ["zoom"],
+      12, ["interpolate", ["linear"], ["get", "weight"], 1, 4, 15, 9],
+      16, ["interpolate", ["linear"], ["get", "weight"], 1, 9, 15, 22],
+    ],
+    "circle-color": [
+      "step", ["get", "priority"],
+      "#4ade80",
+      4,  "#fbbf24",
+      6,  "#f97316",
+      8,  "#dc2626",
+    ],
+    "circle-opacity": ["interpolate", ["linear"], ["zoom"], 12, 0, 13.5, 0.9],
+    "circle-stroke-width": 1.5,
+    "circle-stroke-color": "rgba(255,255,255,0.65)",
   },
 };
 
@@ -25,9 +48,9 @@ export default function HeatmapLayer({ points }) {
   const geojson = useMemo(
     () => ({
       type: "FeatureCollection",
-      features: points.map(({ lat, lng, weight }) => ({
+      features: points.map(({ lat, lng, weight, id, priority }) => ({
         type: "Feature",
-        properties: { weight },
+        properties: { weight, id, priority: priority ?? 5 },
         geometry: { type: "Point", coordinates: [lng, lat] },
       })),
     }),
@@ -39,6 +62,7 @@ export default function HeatmapLayer({ points }) {
   return (
     <Source id="incidents-heat" type="geojson" data={geojson}>
       <Layer {...heatmapLayerStyle} />
+      <Layer {...circleLayerStyle} />
     </Source>
   );
 }

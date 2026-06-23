@@ -68,7 +68,7 @@ function KpiCard({ label, value, accent = "text-slate-900", loading, icon: Icon,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-export default function AdminEstadisticasTab({ incidents, loading, dbRole }) {
+export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTabChange, onFocusIncident }) {
 
   // ── Power BI OTP ──────────────────────────────────────────────────────────
   const [otpLoading,    setOtpLoading]    = useState(false);
@@ -491,7 +491,12 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole }) {
 
         {/* ══ Tab 2: Mapa de Calor Urbano ════════════════════════════════════ */}
         <TabsContent value="mapa">
-          <AdminHeatmapView incidents={incidents} loading={loading} />
+          <AdminHeatmapView
+            incidents={incidents}
+            loading={loading}
+            onTabChange={onTabChange}
+            onFocusIncident={onFocusIncident}
+          />
         </TabsContent>
 
       </Tabs>

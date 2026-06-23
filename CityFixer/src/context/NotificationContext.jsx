@@ -6,6 +6,14 @@ import {
   markAllNotificationsRead,
   markNotificationsByIncident,
 } from "@/services/api";
+import { STATUS_LABELS_PUBLIC } from "@/lib/incidents";
+
+function toFriendlyMessage(msg) {
+  const match = /"([^"]+)"/.exec(msg);
+  const raw = match?.[1];
+  if (!raw || !STATUS_LABELS_PUBLIC[raw]) return msg;
+  return msg.replace(`"${raw}"`, `"${STATUS_LABELS_PUBLIC[raw]}"`);
+}
 
 const NotificationContext = createContext(null);
 
@@ -34,7 +42,7 @@ export function NotificationProvider({ children }) {
     socket.on("disconnect",         ()    => console.log("[socket] desconectado"));
     socket.on("notification", (noti) => {
       setNotifications((prev) => [noti, ...prev]);
-      toast.info(noti.message, { duration: 5000 });
+      toast.info(toFriendlyMessage(noti.message), { duration: 5000 });
     });
 
     return () => socket.disconnect();
