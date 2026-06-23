@@ -39,7 +39,7 @@ const SLIDES = [
 // Preview no interactivo de la CTA card real de InicioTab
 function CtaCardPreview() {
   return (
-    <div className="w-full rounded-2xl bg-primary px-5 py-5 flex flex-col gap-3.5 pointer-events-none select-none">
+    <div className="w-full rounded-2xl bg-[#5C3F99] px-5 py-5 flex flex-col gap-3.5 pointer-events-none select-none">
       <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
         <MapPin size={18} className="text-white" />
       </div>
@@ -50,7 +50,7 @@ function CtaCardPreview() {
       <button
         type="button"
         tabIndex={-1}
-        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white text-primary text-xs font-bold"
+        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white text-[#5C3F99] text-xs font-bold shadow-sm"
       >
         <Plus size={14} />
         Cargar Incidente
@@ -79,21 +79,20 @@ export default function TutorialScreen({ onFinish }) {
   };
 
   return (
-    // CAMBIO CLAVE 1: bg-azul-oscuro reemplazado por bg-brand-dark
-    <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center px-6 py-10">
-      <div className="w-full max-w-sm flex flex-col gap-8">
+    // min-h-[100dvh] evita que la barra de navegación de Safari rompa la pantalla
+    <div className="min-h-[100dvh] bg-[#50387E] flex flex-col items-center justify-center px-6 py-10">
+      <div className="w-full max-w-sm flex flex-col gap-8 relative z-10">
 
         {/* Branding */}
         <div className="flex flex-col items-center gap-2">
           <div className="flex items-center gap-2.5">
-            {/* CAMBIO CLAVE 2: bg-blanquito reemplazado por bg-brand-light */}
-            <span className="bg-brand-light w-1.5 h-8 rounded-full inline-block" />
-            <h1 className="text-white text-2xl font-bold tracking-tight">CityFixer</h1>
+            <span className="bg-[#D3D6FF] w-1.5 h-8 rounded-full inline-block shadow-sm" />
+            <h1 className="text-white text-2xl font-bold tracking-tight drop-shadow-sm">CityFixer</h1>
           </div>
-          <p className="text-white/50 text-xs text-center">Tu ciudad, tu voz</p>
+          <p className="text-white/70 text-xs text-center font-medium">Tu ciudad, tu voz</p>
         </div>
 
-        <div className="bg-white rounded-3xl p-6 flex flex-col gap-6 shadow-xl">
+        <div className="bg-white rounded-3xl p-6 flex flex-col gap-6 shadow-2xl relative z-20">
 
           {/* Indicador de pasos */}
           <div className="flex items-center justify-center gap-1.5">
@@ -101,7 +100,7 @@ export default function TutorialScreen({ onFinish }) {
               <span
                 key={i}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === step ? "w-6 bg-primary" : "w-1.5 bg-slate-200"
+                  i === step ? "w-6 bg-[#5C3F99]" : "w-1.5 bg-slate-200"
                 }`}
               />
             ))}
@@ -113,25 +112,24 @@ export default function TutorialScreen({ onFinish }) {
             {slide.type === "component" ? (
               <CtaCardPreview />
             ) : (
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <Icon size={28} className="text-primary" strokeWidth={1.75} />
+              <div className="w-16 h-16 rounded-2xl bg-[#5C3F99]/10 flex items-center justify-center">
+                <Icon size={28} className="text-[#5C3F99]" strokeWidth={1.75} />
               </div>
             )}
 
             <div className="flex flex-col gap-1.5">
-              {/* CAMBIO CLAVE 3: text-azul-oscuro reemplazado por text-brand-dark */}
-              <h2 className="text-brand-dark font-bold text-lg">{slide.title}</h2>
+              <h2 className="text-[#50387E] font-bold text-lg">{slide.title}</h2>
               <p className="text-gray-500 text-sm leading-relaxed">{slide.text}</p>
             </div>
           </div>
 
           {/* Acciones */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 mt-2">
             {!isFirst && (
               <button
                 type="button"
                 onClick={handleBack}
-                className="flex items-center justify-center px-4 py-3 rounded-2xl border border-gray-200 text-gray-500 text-sm font-semibold hover:bg-gray-50 transition-colors shrink-0"
+                className="flex items-center justify-center px-4 py-3 rounded-2xl border border-gray-200 text-gray-500 text-sm font-semibold hover:bg-gray-50 active:scale-95 transition-all shrink-0"
               >
                 Volver
               </button>
@@ -139,8 +137,7 @@ export default function TutorialScreen({ onFinish }) {
             <button
               type="button"
               onClick={handleNext}
-              // CAMBIO CLAVE 4: bg-azul-oscuro reemplazado por bg-brand-dark, hover:bg-azul reemplazado por hover:bg-brand
-              className="flex items-center justify-center gap-2 flex-1 py-3 rounded-2xl bg-brand-dark text-white text-sm font-semibold hover:bg-brand transition-colors"
+              className="flex items-center justify-center gap-2 flex-1 py-3 rounded-2xl bg-[#50387E] text-white text-sm font-semibold hover:bg-[#5C3F99] active:scale-95 transition-all shadow-md"
             >
               {isLast ? "¡Empezar!" : "Siguiente"}
             </button>
