@@ -46,7 +46,7 @@ export default function SupportInfo() {
 
       <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
         <span className="text-[10px] text-slate-400">© 2026 CityFixer</span>
-        <span className="text-[10px] text-slate-400">Versión 1.0.0</span>
+        <span className="text-[10px] text-slate-400">Versión 1.1.3</span>
       </div>
     </>
   );
