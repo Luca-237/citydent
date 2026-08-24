@@ -27,7 +27,7 @@ const definition = {
     { name: 'Users', description: 'Usuarios, perfiles y roles' },
     { name: 'Notifications', description: 'Notificaciones del usuario' },
     { name: 'Neighborhoods', description: 'Barrios (datos geográficos)' },
-    { name: 'External', description: 'Integración externa (Power BI) vía API Key + OTP' },
+    { name: 'External', description: 'Integración externa (Power BI) vía OTP' },
   ],
   components: {
     securitySchemes: {
@@ -37,11 +37,11 @@ const definition = {
         bearerFormat: 'JWT',
         description: 'JWT propio emitido por el backend tras autenticar con Clerk.',
       },
-      apiKey: {
+      otpAuth: {
         type: 'apiKey',
         in: 'header',
-        name: 'x-api-key',
-        description: 'API Key del scope externo (SCOPE_API_KEY). Usada junto al OTP.',
+        name: 'x-otp-code',
+        description: 'Código OTP de un solo uso, generado por un admin/superAdmin para el consumo externo (Power BI).',
       },
     },
     schemas: {

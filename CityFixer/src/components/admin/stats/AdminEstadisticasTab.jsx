@@ -453,8 +453,8 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTab
             </CardContent>
           </Card>
 
-          {/* ── Power BI — solo superAdmin ── */}
-          {dbRole === "superAdmin" && (
+          {/* ── Power BI — admin y superAdmin ── */}
+          {(dbRole === "admin" || dbRole === "superAdmin") && (
             <Card className="border-slate-200/80 shadow-sm py-0">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-4 flex-wrap">

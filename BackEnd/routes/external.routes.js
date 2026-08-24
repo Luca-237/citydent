@@ -9,16 +9,16 @@ const { requestOtp, getData } = require('../controllers/external.controller');
  * @openapi
  * /api/external/request-otp:
  *   post:
- *     summary: Solicitar OTP para consumo externo (superAdmin)
- *     description: El superAdmin genera un OTP (válido 24 h) para que Power BI consuma los datos.
+ *     summary: Solicitar OTP para consumo externo (admin/superAdmin)
+ *     description: El admin o superAdmin genera un OTP (válido 24 h) para que Power BI consuma los datos.
  *     tags: [External]
  *     security: [{ bearerAuth: [] }]
  *     responses:
  *       200: { description: OTP generado }
  *       403: { description: Sin permisos }
  */
-// superAdmin solicita el OTP desde la app
-router.post('/request-otp', authMiddleware, verifyRole('superAdmin'), requestOtp);
+// admin y superAdmin solicitan el OTP desde la app
+router.post('/request-otp', authMiddleware, verifyRole('admin', 'superAdmin'), requestOtp);
 
 /**
  * @openapi
@@ -26,10 +26,10 @@ router.post('/request-otp', authMiddleware, verifyRole('superAdmin'), requestOtp
  *   get:
  *     summary: Obtener una tabla de datos (Power BI)
  *     description: >
- *       Devuelve una tabla por request. Requiere API Key (SCOPE_API_KEY) + OTP
- *       válido, validados por el middleware externalAuth.
+ *       Devuelve una tabla por request. Requiere un OTP válido en el header
+ *       x-otp-code, validado por el middleware externalAuth.
  *     tags: [External]
- *     security: [{ apiKey: [] }]
+ *     security: [{ otpAuth: [] }]
  *     parameters:
  *       - in: path
  *         name: table
@@ -39,10 +39,10 @@ router.post('/request-otp', authMiddleware, verifyRole('superAdmin'), requestOtp
  *           enum: [groups, incidents, statuses, categories, users]
  *     responses:
  *       200: { description: Filas de la tabla solicitada }
- *       401: { description: API Key u OTP inválidos }
+ *       401: { description: OTP inválido o expirado }
  *       400: { description: Tabla no válida }
  */
-// Power BI consume una tabla por request con API Key + OTP.
+// Power BI consume una tabla por request con OTP.
 // Tablas válidas: groups | incidents | statuses | categories | users
 router.get('/data/:table', externalAuth, getData);
 
