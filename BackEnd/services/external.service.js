@@ -5,7 +5,6 @@ const Incident = require('../models/incident');
 const Status = require('../models/status');
 const Category = require('../models/category');
 const User = require('../models/user');
-const Role = require('../models/role');
 const Neighborhood = require('../models/neighborhood');
 const { sendExternalOtpEmail } = require('./mail.service');
 
@@ -157,12 +156,14 @@ const getCategories = async () => {
 };
 
 /**
- * Tabla de usuarios aplanada (excluye el usuario de sistema de la IA).
+ * Tabla de usuarios aplanada. Incluye el usuario de sistema de la IA (rol `ai`)
+ * para que `statusHistory.changedById` resuelva contra esta tabla: quien consuma
+ * los datos lo filtra por rol si necesita excluirlo.
+ *
  * @returns {Promise<Array<Object>>} Filas de usuarios.
  */
 const getUsers = async () => {
-  const aiRole = await Role.findOne({ name: 'ai' });
-  const users = await User.find({ role: { $ne: aiRole?._id } })
+  const users = await User.find()
     .populate('role', 'name')
     .populate('barrio', 'name');
 
@@ -189,9 +190,9 @@ const getUsers = async () => {
  * respuesta, gestión, resolución), que no se pueden calcular solo con
  * `createdAt` y `finalizedAt`.
  *
- * `changedById` apunta al usuario que hizo el cambio. Las transiciones con
- * `source: 'ai'` referencian al usuario de sistema de la IA, que la tabla
- * `users` excluye a propósito: filtrarlas por `source` del lado del consumidor.
+ * `changedById` apunta al usuario que hizo el cambio y resuelve siempre contra
+ * la tabla `users`, incluido el usuario de sistema de la IA en las transiciones
+ * con `source: 'ai'`. Queda en null solo en las de `source: 'system'`.
  *
  * @returns {Promise<Array<Object>>} Filas del historial, ordenadas por grupo y fecha.
  */
