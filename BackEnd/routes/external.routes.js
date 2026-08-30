@@ -36,14 +36,14 @@ router.post('/request-otp', authMiddleware, verifyRole('admin', 'superAdmin'), r
  *         required: true
  *         schema:
  *           type: string
- *           enum: [groups, incidents, statuses, categories, users]
+ *           enum: [groups, incidents, statusHistory, statuses, categories, neighborhoods, users]
  *     responses:
  *       200: { description: Filas de la tabla solicitada }
  *       401: { description: OTP inválido o expirado }
  *       400: { description: Tabla no válida }
  */
 // Power BI consume una tabla por request con OTP.
-// Tablas válidas: groups | incidents | statuses | categories | users
+// Tablas válidas: groups | incidents | statusHistory | statuses | categories | neighborhoods | users
 router.get('/data/:table', externalAuth, getData);
 
 module.exports = router;
